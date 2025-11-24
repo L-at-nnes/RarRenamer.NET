@@ -1,8 +1,22 @@
-# RAR Renamer
+# RarRenamer.NET
 
-A WPF application built with .NET 8 to rename RAR archives based on their internal folder structure, with advanced features for selection, logging, and custom prefixes/suffixes.
+> **Modern .NET 8 WPF rewrite of [RarRenamer](https://github.com/L-at-nnes/RarRenamer) - 60x faster performance**
 
-**⚡ 60x faster than the PowerShell version!**
+A high-performance WPF application built with .NET 8 to rename RAR archives based on their internal folder structure.
+
+⚡ **This is the actively maintained version.** The original PowerShell version is now deprecated.
+
+---
+
+## 🚀 Why RarRenamer.NET?
+
+- **60x Faster** - Scan 3000 files in ~30 seconds (vs 30 minutes in PowerShell)
+- **Modern UI** - Dark theme WPF interface with responsive design
+- **Single-Click Selection** - No double-clicking needed
+- **Instant Updates** - Real-time prefix/suffix without rescanning
+- **Native Performance** - Uses SharpCompress library, no external dependencies
+
+---
 
 ## Features
 
@@ -30,26 +44,40 @@ A WPF application built with .NET 8 to rename RAR archives based on their intern
 - **Direct Concatenation**: Text added exactly as typed (no automatic dashes or spaces)
 - **Instant Updates**: Real-time preview without rescanning
 
+---
+
 ## Requirements
 
-- **Windows 10/11** (Windows 7 not supported in this version)
-- **.NET 8 Runtime** ([Download](https://dotnet.microsoft.com/download/dotnet/8.0))
-- **No external dependencies** (uses SharpCompress library, no 7-Zip needed)
+- **Windows 10/11**
+- **.NET 8 Runtime** ([Download](https://dotnet.microsoft.com/download/dotnet/8.0)) - Only for framework-dependent version
+- **No external dependencies** - Uses SharpCompress library, no 7-Zip needed
+
+---
 
 ## Installation
 
-### Download Pre-built Binary
-1. Download the latest release
+### Download Pre-built Binary (Recommended)
+
+#### Self-Contained (No .NET Required)
+1. Download `RarRenamer.NET-vX.X.X-self-contained.zip` from [Releases](https://github.com/L-at-nnes/RarRenamer.NET/releases)
 2. Extract the ZIP file
 3. Run `RarRenamer.exe`
+4. **No installation needed!** ✨
+
+#### Framework-Dependent (Smaller Size)
+1. Download `RarRenamer.NET-vX.X.X-framework-dependent.zip` from [Releases](https://github.com/L-at-nnes/RarRenamer.NET/releases)
+2. Install [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) if not already installed
+3. Extract and run `RarRenamer.exe`
 
 ### Build from Source
 ```bash
-git clone <repository-url>
-cd RarRenamer
+git clone https://github.com/L-at-nnes/RarRenamer.NET.git
+cd RarRenamer.NET/RarRenamer
 dotnet build -c Release
 dotnet run
 ```
+
+---
 
 ## Usage
 
@@ -64,6 +92,8 @@ dotnet run
    - Use "Select All" or "Deselect All" buttons
 5. **Rename**: Click "Rename Selected"
 6. **Undo if needed**: Click "Undo Operations" to revert changes
+
+---
 
 ## Examples
 
@@ -91,6 +121,8 @@ Suffix: "-x64"
 Result: P-MyApp-x64.rar
 ```
 
+---
+
 ## How It Works
 
 1. **Scans** each RAR file using SharpCompress library
@@ -98,6 +130,8 @@ Result: P-MyApp-x64.rar
 3. **Applies** optional prefix/suffix to the folder name
 4. **Determines** if renaming is needed
 5. **Renames** the RAR file to match the pattern
+
+---
 
 ## Log File Format
 
@@ -116,12 +150,28 @@ The `rename_log.json` file stores all operations:
 ]
 ```
 
+---
+
 ## Technologies
 
-- **.NET 8** - Modern framework
-- **WPF** - Native Windows UI
-- **SharpCompress 0.41.0** - RAR archive reading
-- **Newtonsoft.Json 13.0.4** - JSON logging
+- **.NET 8** - Modern, high-performance framework
+- **WPF** - Native Windows UI with hardware acceleration
+- **SharpCompress 0.41.0** - Native RAR archive reading
+- **Newtonsoft.Json 13.0.4** - Efficient JSON logging
+- **Async/Await** - Non-blocking UI operations
+
+---
+
+## Performance Comparison
+
+| Operation | PowerShell (Legacy) | RarRenamer.NET | Improvement |
+|-----------|---------------------|----------------|-------------|
+| Scan 3000 files | 30 minutes | ~30 seconds | **60x faster** |
+| Undo 100 files | 4-5 minutes | <5 seconds | **50x faster** |
+| Prefix/Suffix update | Full rescan | Instant | **∞x faster** |
+| UI Responsiveness | Blocked | Always responsive | **100% better** |
+
+---
 
 ## Building & Publishing
 
@@ -150,6 +200,8 @@ dotnet publish -c Release -r win-x64 --self-contained false \
   -o publish/framework-dependent
 ```
 
+---
+
 ## Troubleshooting
 
 ### Common Issues
@@ -167,22 +219,64 @@ dotnet publish -c Release -r win-x64 --self-contained false \
 - Verify files haven't been manually moved/renamed
 - Ensure the log file has valid JSON format
 
-## Performance Comparison
+---
 
-| Operation | PowerShell | C# WPF | Improvement |
-|-----------|-----------|---------|-------------|
-| Scan 3000 files | 30 minutes | ~30 seconds | **60x faster** |
-| Undo 100 files | 4-5 minutes | <5 seconds | **50x faster** |
-| Prefix/Suffix update | Full rescan | Instant | **∞x faster** |
+## Migration from PowerShell Version
+
+The original [RarRenamer](https://github.com/L-at-nnes/RarRenamer) PowerShell version is now deprecated in favor of RarRenamer.NET.
+
+**What's changed:**
+- ✅ 60x faster performance
+- ✅ Modern WPF UI with dark theme
+- ✅ No external dependencies (7-Zip not needed)
+- ✅ Single-click selection
+- ✅ Real-time prefix/suffix updates
+- ✅ Asynchronous operations (responsive UI)
+
+**Note:** The PowerShell version will receive no further updates. Please use RarRenamer.NET for the best experience.
+
+---
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
 
 ## License
 
 Free to use and modify.
 
+---
+
+## Acknowledgments
+
+- Original PowerShell version: [RarRenamer](https://github.com/L-at-nnes/RarRenamer)
+- SharpCompress library for native RAR reading
+- .NET community for the excellent ecosystem
+
+---
+
 ## Version History
 
 - **v3.0** (2025-11-24): Complete rewrite in C# WPF .NET 8 with 60x performance improvement
-- **v2.2** (2025-11-24): PowerShell - Automatic UI mode detection
-- **v2.1** (2025-11-19): PowerShell - Windows 7 compatibility
-- **v2.0** (2025-11-18): PowerShell - Added checkboxes, logging/rollback
-- **v1.0**: PowerShell - Initial release
+- **v2.2** (2025-11-24): PowerShell - Automatic UI mode detection (deprecated)
+- **v2.1** (2025-11-19): PowerShell - Windows 7 compatibility (deprecated)
+- **v2.0** (2025-11-18): PowerShell - Added checkboxes, logging/rollback (deprecated)
+- **v1.0**: PowerShell - Initial release (deprecated)
+
+---
+
+<p align="center">
+  <strong>Made with ❤️ using C# and WPF</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/L-at-nnes/RarRenamer">📜 Legacy PowerShell Version</a>
+</p>
