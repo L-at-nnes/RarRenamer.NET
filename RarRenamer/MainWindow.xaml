@@ -1,0 +1,151 @@
+﻿<Window x:Class="RarRenamer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="RAR Renamer - C# Edition" Height="700" Width="1200"
+        Background="#1E1E1E" WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#007ACC"/>
+            <Setter Property="Foreground" Value="#F1F1F1"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderThickness="0" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1C97EA"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#3E3E42"/>
+                    <Setter Property="Foreground" Value="#656565"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Foreground" Value="#F1F1F1"/>
+            <Setter Property="BorderBrush" Value="#3F3F46"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style TargetType="Label">
+            <Setter Property="Foreground" Value="#F1F1F1"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="Foreground" Value="#F1F1F1"/>
+            <Setter Property="BorderBrush" Value="#3F3F46"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="RowBackground" Value="#1E1E1E"/>
+            <Setter Property="AlternatingRowBackground" Value="#252526"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Foreground" Value="#F1F1F1"/>
+            <Setter Property="BorderBrush" Value="#3F3F46"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="DataGridRow_PreviewMouseLeftButtonDown"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#2A2D2E"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#094771"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Padding="10,6" Background="{TemplateBinding Background}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ProgressBar">
+            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Foreground" Value="#007ACC"/>
+            <Setter Property="Height" Value="4"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+            <Label Content="Folder:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBox x:Name="txtFolder" Width="750" VerticalAlignment="Center" IsReadOnly="True"/>
+            <Button x:Name="btnBrowse" Content="Browse" Margin="10,0,0,0" Width="100" Click="BtnBrowse_Click"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15">
+            <Label Content="Prefix:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBox x:Name="txtPrefix" Width="200" VerticalAlignment="Center" TextChanged="TxtPrefixSuffix_TextChanged"/>
+            <Label Content="Suffix:" VerticalAlignment="Center" Margin="30,0,10,0"/>
+            <TextBox x:Name="txtSuffix" Width="200" VerticalAlignment="Center" TextChanged="TxtPrefixSuffix_TextChanged"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,15">
+            <Button x:Name="btnScan" Content="Scan Archives" Width="150" Click="BtnScan_Click"/>
+            <Label x:Name="lblStatus" Content="" Margin="15,0,0,0" Foreground="#4EC9B0"/>
+        </StackPanel>
+
+        <ProgressBar Grid.Row="3" x:Name="progressBar" Margin="0,0,0,15" IsIndeterminate="False" Visibility="Collapsed"/>
+
+        <DataGrid Grid.Row="4" x:Name="dgResults" Margin="0,0,0,15">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="60"/>
+                <DataGridTextColumn Header="Current Name" Binding="{Binding CurrentName}" Width="2*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="New Name" Binding="{Binding NewName}" Width="2*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="btnSelectAll" Content="Select All" Width="120" Margin="0,0,10,0" Click="BtnSelectAll_Click"/>
+            <Button x:Name="btnDeselectAll" Content="Deselect All" Width="120" Margin="0,0,10,0" Click="BtnDeselectAll_Click"/>
+            <Button x:Name="btnRename" Content="Rename Selected" Width="150" Click="BtnRename_Click"/>
+            <Button x:Name="btnUndo" Content="Undo Operations" Width="150" Margin="10,0,0,0" Background="#D17000" Click="BtnUndo_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

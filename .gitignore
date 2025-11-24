@@ -1,0 +1,73 @@
+# .NET build artifacts
+bin/
+obj/
+publish/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio cache/options
+.vs/
+.vscode/
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# NuGet packages
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Application logs
+rename_log.json
+RarRenamer_Log.json
+
+# Windows files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Rider
+.idea/
+*.sln.iml
+
+# User-specific files (local paths, etc.)
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Test files
+*.rar
