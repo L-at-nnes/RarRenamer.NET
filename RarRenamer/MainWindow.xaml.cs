@@ -117,51 +117,39 @@ public partial class MainWindow : Window
             string suffix = txtSuffix.Text;
 
             int processedCount = 0;
-            var semaphore = new SemaphoreSlim(Environment.ProcessorCount * 2);
 
-            await Task.Run(async () =>
-            {
-                var tasks = rarFilePaths.Select(async filePath =>
+            await Parallel.ForEachAsync(
+                rarFilePaths,
+                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 2 },
+                async (filePath, cancellationToken) =>
                 {
-                    await semaphore.WaitAsync();
-                    try
+                    var fileName = Path.GetFileName(filePath);
+                    var scanResult = await RarScanner.ScanArchiveAsync(filePath);
+
+                    var item = new RarFileItem
                     {
-                        var fileName = Path.GetFileName(filePath);
-                        var scanResult = await RarScanner.ScanArchiveAsync(filePath);
+                        CurrentName = fileName,
+                        FullPath = filePath,
+                        FolderName = scanResult.FolderName,
+                        Status = scanResult.Status,
+                        IsSelected = !string.IsNullOrEmpty(scanResult.FolderName),
+                        CanRename = !string.IsNullOrEmpty(scanResult.FolderName)
+                    };
 
-                        var item = new RarFileItem
-                        {
-                            CurrentName = fileName,
-                            FullPath = filePath,
-                            FolderName = scanResult.FolderName,
-                            Status = scanResult.Status,
-                            IsSelected = !string.IsNullOrEmpty(scanResult.FolderName),
-                            CanRename = !string.IsNullOrEmpty(scanResult.FolderName)
-                        };
-
-                        if (!string.IsNullOrEmpty(scanResult.FolderName))
-                        {
-                            item.NewName = $"{prefix}{scanResult.FolderName}{suffix}.rar";
-                        }
-
-                        await Dispatcher.InvokeAsync(() =>
-                        {
-                            _rarFiles.Add(item);
-                            processedCount++;
-                            progressBar.Value = processedCount;
-                            lblStatus.Content = $"Scanned: {processedCount}/{totalFiles}";
-                        });
-
-                        return item;
-                    }
-                    finally
+                    if (!string.IsNullOrEmpty(scanResult.FolderName))
                     {
-                        semaphore.Release();
+                        item.NewName = $"{prefix}{scanResult.FolderName}{suffix}.rar";
                     }
-                }).ToList();
 
-                await Task.WhenAll(tasks);
-            });
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        _rarFiles.Add(item);
+                        processedCount++;
+                        progressBar.Value = processedCount;
+                        lblStatus.Content = $"Scanned: {processedCount}/{totalFiles}";
+                    });
+                }
+            );
 
             lblStatus.Content = $"Scan complete: {_rarFiles.Count(r => r.CanRename)}/{totalFiles} files can be renamed";
             progressBar.Visibility = Visibility.Collapsed;
