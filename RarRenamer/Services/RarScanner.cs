@@ -15,42 +15,59 @@ namespace RarRenamer.Services
     {
         public static async Task<ScanResult> ScanArchiveAsync(string filePath)
         {
-            return await Task.Run(() =>
+            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            
+            try
             {
-                var result = new ScanResult();
-
-                try
+                return await Task.Run(() =>
                 {
-                    using var archive = RarArchive.Open(filePath);
+                    var result = new ScanResult();
 
-                    var firstFolder = archive.Entries
-                        .Where(e => e.IsDirectory)
-                        .Where(e => e.Key != null && !e.Key.Contains('/') && !e.Key.Contains('\\'))
-                        .FirstOrDefault();
-
-                    if (firstFolder != null && firstFolder.Key != null)
+                    try
                     {
-                        result.FolderName = firstFolder.Key.TrimEnd('/', '\\');
-                        result.Status = "? Ready";
-                    }
-                    else
-                    {
-                        result.Status = "?? No root folder";
-                    }
-                }
-                catch (Exception ex) when (ex.Message.Contains("password") || ex.Message.Contains("encrypted"))
-                {
-                    result.Status = "?? Password protected";
-                    result.IsPasswordProtected = true;
-                }
-                catch (Exception)
-                {
-                    result.Status = "? Corrupted archive";
-                    result.IsCorrupted = true;
-                }
+                        using var archive = RarArchive.Open(filePath);
 
-                return result;
-            });
+                        var firstFolder = archive.Entries
+                            .Where(e => e.IsDirectory)
+                            .Where(e => e.Key != null && !e.Key.Contains('/') && !e.Key.Contains('\\'))
+                            .FirstOrDefault();
+
+                        if (firstFolder != null && firstFolder.Key != null)
+                        {
+                            result.FolderName = firstFolder.Key.TrimEnd('/', '\\');
+                            result.Status = "? Ready";
+                        }
+                        else
+                        {
+                            result.Status = "?? No root folder";
+                        }
+                    }
+                    catch (Exception ex) when (ex.Message.Contains("password") || ex.Message.Contains("encrypted"))
+                    {
+                        result.Status = "?? Password protected";
+                        result.IsPasswordProtected = true;
+                    }
+                    catch (Exception)
+                    {
+                        result.Status = "? Corrupted archive";
+                        result.IsCorrupted = true;
+                    }
+
+                    return result;
+                }, cancellationTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return new ScanResult
+                {
+                    Status = "?? Timeout (file took too long)",
+                    IsCorrupted = true
+                };
+            }
+            finally
+            {
+                cancellationTokenSource.Dispose();
+            }
         }
     }
 }

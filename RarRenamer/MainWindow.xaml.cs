@@ -117,14 +117,14 @@ public partial class MainWindow : Window
             string suffix = txtSuffix.Text;
 
             int processedCount = 0;
+            var semaphore = new SemaphoreSlim(Environment.ProcessorCount * 2);
 
             await Task.Run(async () =>
             {
-                var tasks = new List<Task<RarFileItem>>();
-
-                foreach (var filePath in rarFilePaths)
+                var tasks = rarFilePaths.Select(async filePath =>
                 {
-                    tasks.Add(Task.Run(async () =>
+                    await semaphore.WaitAsync();
+                    try
                     {
                         var fileName = Path.GetFileName(filePath);
                         var scanResult = await RarScanner.ScanArchiveAsync(filePath);
@@ -153,8 +153,12 @@ public partial class MainWindow : Window
                         });
 
                         return item;
-                    }));
-                }
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                }).ToList();
 
                 await Task.WhenAll(tasks);
             });
