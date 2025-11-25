@@ -6,6 +6,7 @@ using System.Windows.Input;
 using RarRenamer.Models;
 using RarRenamer.Services;
 using MessageBox = System.Windows.MessageBox;
+using System.Threading;
 
 namespace RarRenamer;
 
@@ -15,6 +16,7 @@ public partial class MainWindow : Window
     private LogManager _logManager;
     private string _selectedFolder = string.Empty;
     private bool _isScanning = false;
+    private CancellationTokenSource? _cancellationTokenSource;
 
     public MainWindow()
     {
@@ -88,10 +90,13 @@ public partial class MainWindow : Window
         try
         {
             _isScanning = true;
+            _cancellationTokenSource = new CancellationTokenSource();
             _rarFiles.Clear();
 
             btnBrowse.IsEnabled = false;
             btnScan.IsEnabled = false;
+            btnCancel.IsEnabled = true;
+            btnCancel.Visibility = Visibility.Visible;
             btnRename.IsEnabled = false;
             btnUndo.IsEnabled = false;
             btnSelectAll.IsEnabled = false;
@@ -120,7 +125,11 @@ public partial class MainWindow : Window
 
             await Parallel.ForEachAsync(
                 rarFilePaths,
-                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 2 },
+                new ParallelOptions 
+                { 
+                    MaxDegreeOfParallelism = Environment.ProcessorCount * 2,
+                    CancellationToken = _cancellationTokenSource.Token
+                },
                 async (filePath, cancellationToken) =>
                 {
                     var fileName = Path.GetFileName(filePath);
@@ -154,6 +163,12 @@ public partial class MainWindow : Window
             lblStatus.Content = $"Scan complete: {_rarFiles.Count(r => r.CanRename)}/{totalFiles} files can be renamed";
             progressBar.Visibility = Visibility.Collapsed;
         }
+        catch (OperationCanceledException)
+        {
+            lblStatus.Content = "Scan cancelled by user";
+            progressBar.Visibility = Visibility.Collapsed;
+            MessageBox.Show("Scan was cancelled.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
         catch (Exception ex)
         {
             MessageBox.Show($"Error during scan: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -162,8 +177,13 @@ public partial class MainWindow : Window
         finally
         {
             _isScanning = false;
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
+            
             btnBrowse.IsEnabled = true;
             btnScan.IsEnabled = true;
+            btnCancel.IsEnabled = false;
+            btnCancel.Visibility = Visibility.Collapsed;
             btnRename.IsEnabled = true;
             btnUndo.IsEnabled = true;
             btnSelectAll.IsEnabled = true;
@@ -171,6 +191,16 @@ public partial class MainWindow : Window
             txtPrefix.IsEnabled = true;
             txtSuffix.IsEnabled = true;
             progressBar.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void BtnCancel_Click(object sender, RoutedEventArgs e)
+    {
+        if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
+        {
+            _cancellationTokenSource.Cancel();
+            btnCancel.IsEnabled = false;
+            lblStatus.Content = "Cancelling scan...";
         }
     }
 
