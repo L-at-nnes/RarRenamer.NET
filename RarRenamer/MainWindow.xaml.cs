@@ -113,7 +113,8 @@ public partial class MainWindow : Window
                 return;
             }
 
-            lblStatus.Content = $"Scanning {totalFiles} RAR files...";
+            int optimalParallelism = DriveDetector.GetOptimalParallelism(_selectedFolder);
+            lblStatus.Content = $"Scanning {totalFiles} RAR files (parallelism: {optimalParallelism})...";
             progressBar.Visibility = Visibility.Visible;
             progressBar.Maximum = totalFiles;
             progressBar.Value = 0;
@@ -122,12 +123,15 @@ public partial class MainWindow : Window
             string suffix = txtSuffix.Text;
 
             int processedCount = 0;
+            var buffer = new List<RarFileItem>();
+            int batchSize = 50;
+            var bufferLock = new object();
 
             await Parallel.ForEachAsync(
                 rarFilePaths,
                 new ParallelOptions 
                 { 
-                    MaxDegreeOfParallelism = Environment.ProcessorCount * 2,
+                    MaxDegreeOfParallelism = optimalParallelism,
                     CancellationToken = _cancellationTokenSource.Token
                 },
                 async (filePath, cancellationToken) =>
@@ -150,15 +154,45 @@ public partial class MainWindow : Window
                         item.NewName = $"{prefix}{scanResult.FolderName}{suffix}.rar";
                     }
 
-                    await Dispatcher.InvokeAsync(() =>
+                    List<RarFileItem>? itemsToAdd = null;
+                    
+                    lock (bufferLock)
                     {
-                        _rarFiles.Add(item);
+                        buffer.Add(item);
                         processedCount++;
-                        progressBar.Value = processedCount;
-                        lblStatus.Content = $"Scanned: {processedCount}/{totalFiles}";
-                    });
+
+                        if (buffer.Count >= batchSize)
+                        {
+                            itemsToAdd = buffer.ToList();
+                            buffer.Clear();
+                        }
+                    }
+
+                    if (itemsToAdd != null)
+                    {
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            foreach (var i in itemsToAdd)
+                                _rarFiles.Add(i);
+                            
+                            progressBar.Value = processedCount;
+                            lblStatus.Content = $"Scanned: {processedCount}/{totalFiles}";
+                        });
+                    }
                 }
             );
+
+            if (buffer.Count > 0)
+            {
+                var itemsToAdd = buffer.ToList();
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    foreach (var i in itemsToAdd)
+                        _rarFiles.Add(i);
+                    
+                    progressBar.Value = processedCount;
+                });
+            }
 
             lblStatus.Content = $"Scan complete: {_rarFiles.Count(r => r.CanRename)}/{totalFiles} files can be renamed";
             progressBar.Visibility = Visibility.Collapsed;
@@ -333,9 +367,35 @@ public partial class MainWindow : Window
         undoWindow.Owner = this;
         undoWindow.ShowDialog();
 
-        if (undoWindow.DialogResult == true && !string.IsNullOrEmpty(_selectedFolder))
+        if (undoWindow.DialogResult == true)
         {
-            BtnScan_Click(this, new RoutedEventArgs());
+            RefreshFileList();
         }
+    }
+
+    private void RefreshFileList()
+    {
+        string prefix = txtPrefix.Text;
+        string suffix = txtSuffix.Text;
+
+        for (int i = _rarFiles.Count - 1; i >= 0; i--)
+        {
+            var item = _rarFiles[i];
+            
+            if (!File.Exists(item.FullPath))
+            {
+                _rarFiles.RemoveAt(i);
+                continue;
+            }
+
+            item.CurrentName = Path.GetFileName(item.FullPath);
+            
+            if (!string.IsNullOrEmpty(item.FolderName))
+            {
+                item.NewName = $"{prefix}{item.FolderName}{suffix}.rar";
+            }
+        }
+
+        lblStatus.Content = $"File list refreshed: {_rarFiles.Count} files";
     }
 }
