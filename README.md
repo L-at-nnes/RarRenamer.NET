@@ -54,22 +54,33 @@ A high-performance WPF application built with .NET 8 to rename RAR archives base
 
 ---
 
-## Installation
+## 📥 Installation
 
-### Download Pre-built Binary (Recommended)
+### Option 1: Self-Contained (Recommended - No .NET Required)
 
-#### Self-Contained (No .NET Required)
-1. Download `RarRenamer.NET-vX.X.X-self-contained.zip` from [Releases](https://github.com/L-at-nnes/RarRenamer.NET/releases)
-2. Extract the ZIP file
-3. Run `RarRenamer.exe`
-4. **No installation needed!** ✨
+**⬇️ [Download from MediaFire (63 MB)](https://www.mediafire.com/file/m9h3n0xiba18py5/RarRenamer.NET-v3.0.0-self-contained.zip/file)**
 
-#### Framework-Dependent (Smaller Size)
-1. Download `RarRenamer.NET-vX.X.X-framework-dependent.zip` from [Releases](https://github.com/L-at-nnes/RarRenamer.NET/releases)
-2. Install [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) if not already installed
+1. Download the ZIP file from MediaFire
+2. Extract `RarRenamer.exe`
+3. Run the application
+4. **No installation or .NET Runtime needed!** ✨
+
+> **Note:** Due to GitHub's 25 MB file size limit for releases, the self-contained version is hosted on MediaFire.
+
+---
+
+### Option 2: Framework-Dependent (Smaller - Requires .NET 8)
+
+**⬇️ Download from [Releases](https://github.com/L-at-nnes/RarRenamer.NET/releases) (1 MB)**
+
+1. Install [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) if not already installed
+2. Download `RarRenamer.NET-v3.0.0-framework-dependent.zip` from GitHub Releases
 3. Extract and run `RarRenamer.exe`
 
-### Build from Source
+---
+
+### Option 3: Build from Source
+
 ```bash
 git clone https://github.com/L-at-nnes/RarRenamer.NET.git
 cd RarRenamer.NET/RarRenamer
