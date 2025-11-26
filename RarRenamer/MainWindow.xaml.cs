@@ -17,6 +17,9 @@ public partial class MainWindow : Window
     private string _selectedFolder = string.Empty;
     private bool _isScanning = false;
     private CancellationTokenSource? _cancellationTokenSource;
+    private int _autoDetectedThreads = 16;
+    private System.Windows.Threading.DispatcherTimer? _threadButtonTimer;
+    private int _threadButtonDirection = 0;
 
     public MainWindow()
     {
@@ -26,6 +29,9 @@ public partial class MainWindow : Window
         
         _selectedFolder = AppDomain.CurrentDomain.BaseDirectory;
         txtFolder.Text = _selectedFolder;
+
+        _autoDetectedThreads = DriveDetector.GetOptimalParallelism(_selectedFolder);
+        txtThreads.Text = _autoDetectedThreads.ToString();
     }
 
     private void DataGridRow_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -37,6 +43,83 @@ public partial class MainWindow : Window
                 item.IsSelected = !item.IsSelected;
                 e.Handled = true;
             }
+        }
+    }
+
+    private int? ParseThreadsInput()
+    {
+        string input = txtThreads.Text.Trim();
+        
+        if (string.IsNullOrEmpty(input))
+        {
+            return null;
+        }
+
+        if (int.TryParse(input, out int threads) && threads > 0 && threads <= 256)
+        {
+            return threads;
+        }
+
+        return null;
+    }
+
+    private void TxtThreads_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+    {
+        e.Handled = !int.TryParse(e.Text, out _);
+    }
+
+    private void TxtThreads_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (int.TryParse(txtThreads.Text, out int value))
+        {
+            if (value < 1)
+                txtThreads.Text = "1";
+            else if (value > 256)
+                txtThreads.Text = "256";
+        }
+    }
+
+    private void BtnThreadsUp_Click(object sender, RoutedEventArgs e)
+    {
+        IncrementThreads(1);
+    }
+
+    private void BtnThreadsDown_Click(object sender, RoutedEventArgs e)
+    {
+        IncrementThreads(-1);
+    }
+
+    private void BtnThreadsUpDown_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is System.Windows.Controls.Button btn)
+        {
+            _threadButtonDirection = btn.Content.ToString() == "▲" ? 1 : -1;
+            
+            _threadButtonTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(100)
+            };
+            _threadButtonTimer.Tick += (s, args) => IncrementThreads(_threadButtonDirection);
+            _threadButtonTimer.Start();
+        }
+    }
+
+    private void BtnThreadsUpDown_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        _threadButtonTimer?.Stop();
+        _threadButtonTimer = null;
+    }
+
+    private void IncrementThreads(int delta)
+    {
+        if (int.TryParse(txtThreads.Text, out int current))
+        {
+            int newValue = Math.Clamp(current + delta, 1, 256);
+            txtThreads.Text = newValue.ToString();
+        }
+        else
+        {
+            txtThreads.Text = _autoDetectedThreads.ToString();
         }
     }
 
@@ -54,6 +137,13 @@ public partial class MainWindow : Window
             _selectedFolder = dialog.SelectedPath;
             txtFolder.Text = _selectedFolder;
             lblStatus.Content = $"Folder selected: {_selectedFolder}";
+
+            _autoDetectedThreads = DriveDetector.GetOptimalParallelism(_selectedFolder);
+            
+            if (!int.TryParse(txtThreads.Text, out _))
+            {
+                txtThreads.Text = _autoDetectedThreads.ToString();
+            }
         }
     }
 
@@ -113,8 +203,8 @@ public partial class MainWindow : Window
                 return;
             }
 
-            int optimalParallelism = DriveDetector.GetOptimalParallelism(_selectedFolder);
-            lblStatus.Content = $"Scanning {totalFiles} RAR files (parallelism: {optimalParallelism})...";
+            int optimalParallelism = DriveDetector.GetOptimalParallelism(_selectedFolder, ParseThreadsInput());
+            lblStatus.Content = $"Scanning {totalFiles} RAR files (threads: {optimalParallelism})...";
             progressBar.Visibility = Visibility.Visible;
             progressBar.Maximum = totalFiles;
             progressBar.Value = 0;

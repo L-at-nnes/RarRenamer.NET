@@ -5,8 +5,13 @@ namespace RarRenamer.Services
 {
     public static class DriveDetector
     {
-        public static int GetOptimalParallelism(string folderPath)
+        public static int GetOptimalParallelism(string folderPath, int? userOverride = null)
         {
+            if (userOverride.HasValue && userOverride.Value > 0)
+            {
+                return userOverride.Value;
+            }
+
             try
             {
                 var driveInfo = new DriveInfo(Path.GetPathRoot(folderPath) ?? "C:\\");
@@ -20,7 +25,7 @@ namespace RarRenamer.Services
                 }
                 else
                 {
-                    return Math.Max(4, cpuCores / 2);
+                    return Math.Max(16, cpuCores);
                 }
             }
             catch

@@ -123,6 +123,21 @@
             <TextBox x:Name="txtPrefix" Width="200" VerticalAlignment="Center" TextChanged="TxtPrefixSuffix_TextChanged"/>
             <Label Content="Suffix:" VerticalAlignment="Center" Margin="30,0,10,0"/>
             <TextBox x:Name="txtSuffix" Width="200" VerticalAlignment="Center" TextChanged="TxtPrefixSuffix_TextChanged"/>
+            <Label Content="Threads:" VerticalAlignment="Center" Margin="30,0,10,0"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="20"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="txtThreads" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Center" 
+                         PreviewTextInput="TxtThreads_PreviewTextInput" TextChanged="TxtThreads_TextChanged"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <Button Content="▲" Width="20" Height="15" Padding="0" FontSize="8" Click="BtnThreadsUp_Click" 
+                            PreviewMouseDown="BtnThreadsUpDown_PreviewMouseDown" PreviewMouseUp="BtnThreadsUpDown_PreviewMouseUp"/>
+                    <Button Content="▼" Width="20" Height="15" Padding="0" FontSize="8" Click="BtnThreadsDown_Click" Margin="0,0,0,0"
+                            PreviewMouseDown="BtnThreadsUpDown_PreviewMouseDown" PreviewMouseUp="BtnThreadsUpDown_PreviewMouseUp"/>
+                </StackPanel>
+            </Grid>
         </StackPanel>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,15">

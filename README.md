@@ -53,6 +53,7 @@ A high-performance WPF application built with .NET 8 to rename RAR archives base
 - **Real-time prefix/suffix updates**: No rescanning needed
 - **Asynchronous operations**: UI stays responsive during all operations
 - **Smart parallelism**: Automatically adjusts to drive type (SSD: high threads, HDD: low threads)
+- **Manual thread control**: Adjust parallelism with ▲▼ buttons (hold for continuous increment)
 - **Timeout protection**: 30-second timeout per file prevents hanging
 - **Batch UI updates**: Updates in groups of 50 for better performance
 
@@ -103,7 +104,7 @@ If you want to run on Windows 7, you'll need:
 
 ### Option 1: Self-Contained (Recommended - No .NET Required)
 
-**⬇️ [Download from MediaFire (~63 MB)](https://www.mediafire.com/file/0iv65ek5jvuc8v5/RarRenamer.NET-v3.1.0-self-contained.zip/file)**
+**⬇️ [Download from MediaFire (~66 MB)](https://www.mediafire.com/file/qj5mh6uyku90bsl/RarRenamer.NET-v3.1.1-self-contained.zip/file)**
 
 1. Download the ZIP file from MediaFire
 2. Extract `RarRenamer.exe`
@@ -143,22 +144,38 @@ dotnet run
 
 1. **Install 7-Zip** if not already installed ([Download](https://www.7-zip.org/))
 2. **Select folder**: Click "Browse" to choose a folder containing RAR files
-3. **Scan archives**: Click "Scan Archives"
-   - The app detects your drive type (SSD/HDD) and optimizes automatically
-   - Status shows parallelism level (e.g., "parallelism: 96" for SSD)
+3. **Adjust threads** (optional):
+   - Auto-detected value shown (e.g., 16 for HDD, 96 for SSD)
+   - Use ▲▼ buttons to adjust (hold to increment/decrement continuously)
+   - Or type a number directly (1-256)
+   - Higher values = more parallel 7z processes (faster on capable systems)
+4. **Scan archives**: Click "Scan Archives"
+   - Status shows actual threads used (e.g., "threads: 32")
    - **Cancel anytime**: Click red "Cancel Scan" button if needed
-4. **Configure prefix/suffix** (optional):
+5. **Configure prefix/suffix** (optional):
    - Enter prefix (e.g., "P-" or "MyApp ")
    - Enter suffix (e.g., "-v2" or " Portable")
    - **Test instantly**: After first scan, changing prefix/suffix is instant!
-5. **Select files**: 
+6. **Select files**: 
    - Click on rows to toggle selection
    - Use "Select All" or "Deselect All" buttons
-6. **Rename**: Click "Rename Selected"
-7. **Undo if needed**: 
+7. **Rename**: Click "Rename Selected"
+8. **Undo if needed**: 
    - Click "Undo Operations" to revert changes
    - **Selections are preserved!**
    - **Test new suffix instantly** - no rescan needed!
+
+### Thread Count Recommendations
+
+| Storage Type | Recommended Threads | Notes |
+|--------------|---------------------|-------|
+| **NVMe SSD** | 64-128 | High parallelism works well |
+| **SATA SSD** | 32-64 | Good balance |
+| **HDD 7200** | 16-32 | Start with auto (16), increase if CPU/RAM low |
+| **HDD 5400** | 16-24 | Conservative for slow drives |
+| **Network/NAS** | 8-16 | Lower to avoid network saturation |
+
+**Tip:** If scan seems slow and CPU usage is low (< 10%), try increasing threads. If system becomes unresponsive, decrease threads.
 
 ---
 
@@ -365,6 +382,8 @@ Free to use and modify.
 
 ## Version History
 
+- **v3.1.2** (2025-01-XX): Added manual thread control with ▲▼ buttons, increased default HDD threads to 16
+- **v3.1.1** (2025-01-XX): Critical fixes - Process zombie cleanup, race condition fix, async improvements
 - **v3.1.0** (2025-01-XX): Major performance overhaul - 7-Zip CLI integration, instant refresh after undo, drive detection
 - **v3.0.1** (2025-01-XX): Critical performance fix - Added parallelism control, timeout protection, cancel button
 - **v3.0.0** (2025-11-24): Complete rewrite in C# WPF .NET 8 with 60x performance improvement
