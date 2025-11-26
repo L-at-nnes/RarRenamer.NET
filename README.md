@@ -103,7 +103,7 @@ If you want to run on Windows 7, you'll need:
 
 ### Option 1: Self-Contained (Recommended - No .NET Required)
 
-**⬇️ [Download from MediaFire (~65 MB)](https://www.mediafire.com/file/VOTRE_LIEN/RarRenamer.NET-v3.1.0-self-contained.zip/file)**
+**⬇️ [Download from MediaFire (~63 MB)](https://www.mediafire.com/file/0iv65ek5jvuc8v5/RarRenamer.NET-v3.1.0-self-contained.zip/file)**
 
 1. Download the ZIP file from MediaFire
 2. Extract `RarRenamer.exe`

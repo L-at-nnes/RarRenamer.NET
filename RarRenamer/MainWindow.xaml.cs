@@ -155,11 +155,13 @@ public partial class MainWindow : Window
                     }
 
                     List<RarFileItem>? itemsToAdd = null;
+                    int currentCount = 0;
                     
                     lock (bufferLock)
                     {
                         buffer.Add(item);
                         processedCount++;
+                        currentCount = processedCount;
 
                         if (buffer.Count >= batchSize)
                         {
@@ -175,8 +177,8 @@ public partial class MainWindow : Window
                             foreach (var i in itemsToAdd)
                                 _rarFiles.Add(i);
                             
-                            progressBar.Value = processedCount;
-                            lblStatus.Content = $"Scanned: {processedCount}/{totalFiles}";
+                            progressBar.Value = currentCount;
+                            lblStatus.Content = $"Scanned: {currentCount}/{totalFiles}";
                         });
                     }
                 }

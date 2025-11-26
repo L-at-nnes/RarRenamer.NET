@@ -65,13 +65,14 @@ namespace RarRenamer.Services
             
             try
             {
-                return await Task.Run(() =>
+                return await Task.Run(async () =>
                 {
                     var result = new ScanResult();
+                    Process? process = null;
 
                     try
                     {
-                        var process = new Process
+                        process = new Process
                         {
                             StartInfo = new ProcessStartInfo
                             {
@@ -86,9 +87,16 @@ namespace RarRenamer.Services
                         };
 
                         process.Start();
-                        string output = process.StandardOutput.ReadToEnd();
-                        string error = process.StandardError.ReadToEnd();
-                        process.WaitForExit();
+                        
+                        var outputTask = process.StandardOutput.ReadToEndAsync();
+                        var errorTask = process.StandardError.ReadToEndAsync();
+                        
+                        var processExitTask = process.WaitForExitAsync(cancellationTokenSource.Token);
+                        
+                        await Task.WhenAll(outputTask, errorTask, processExitTask);
+
+                        string output = await outputTask;
+                        string error = await errorTask;
 
                         if (process.ExitCode != 0)
                         {
@@ -148,6 +156,18 @@ namespace RarRenamer.Services
                     {
                         result.Status = "? Corrupted archive";
                         result.IsCorrupted = true;
+                    }
+                    finally
+                    {
+                        if (process != null && !process.HasExited)
+                        {
+                            try
+                            {
+                                process.Kill(true);
+                            }
+                            catch { }
+                        }
+                        process?.Dispose();
                     }
 
                     return result;
