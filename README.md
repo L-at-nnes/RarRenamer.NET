@@ -18,30 +18,6 @@ A high-performance WPF application built with .NET 8 to rename RAR archives base
 - **Cancellable Operations** - Stop scans anytime with Cancel button
 - **Smart Drive Detection** - Automatically optimizes for SSD/HDD
 
----
-
-## ⚡ Performance
-
-### Scan Speed (2300-3000 RAR files, 500 GB total)
-
-| Storage Type | Scan Time | Improvement vs v3.0 |
-|--------------|-----------|---------------------|
-| **NVMe SSD** | 30-60 seconds | 10x faster |
-| **SATA SSD** | 1-2 minutes | 8x faster |
-| **HDD 7200 RPM** | 3-8 minutes | 12x faster |
-| **HDD 5400 RPM** | 5-12 minutes | **20x faster** |
-
-**Note:** v3.1.0 uses 7-Zip CLI instead of SharpCompress library, resulting in dramatic performance improvements.
-
-### Undo & Prefix/Suffix Testing
-
-| Operation | Time | Notes |
-|-----------|------|-------|
-| Undo 100 files | < 1 second | No rescan needed |
-| Change prefix/suffix after scan | **Instant** | List refreshes instantly |
-| Test different suffix | **0 seconds** | No need to rescan! |
-
-**Major UX improvement:** After undo or rename operations, you can test different prefix/suffix combinations instantly without rescanning!
 
 ---
 
@@ -56,29 +32,6 @@ A high-performance WPF application built with .NET 8 to rename RAR archives base
 - **Manual thread control**: Adjust parallelism with ▲▼ buttons (hold for continuous increment)
 - **Timeout protection**: 60-second timeout per file prevents hanging (optimized for slow drives)
 - **Batch UI updates**: Updates in groups of 50 for better performance
-
-### ✨ New in v3.4.1
-- **Multi-selection with Ctrl/Shift**: Select multiple files at once (no more clicking one by one!)
-- **GridSplitter**: Resize log and file list panels to your preference
-- **Double-click to open**: Double-click any file to open it in Windows Explorer
-- **Optimized logging**: Limited to 500 lines max to reduce RAM usage
-- **Smoother scrolling**: Full virtualization enabled for better performance with large lists
-- **Undo window improved**: Ctrl/Shift selection also works in Undo Operations window
-
-### ✨ New in v3.4.0
-- **2-Tab Interface**: Separate tabs for Scanning and Queue management
-- **Queue System**: Add files to a persistent queue, rename them later
-- **Queue Persistence**: Queue survives application restarts (`queue.json`)
-- **Real-time Logging**: Live console showing all operations in the UI
-- **Debug File Export**: Optional `debug_log.txt` with complete stack traces
-- **Error Bypass**: Corrupted/password-protected files don't block other threads
-
-### ✨ New in v3.2.0
-- **Pause/Resume**: Pause and resume scans at any time without losing progress
-- **Editable folder path**: Type or paste folder paths directly (no more browse-only)
-- **Standard checkbox behavior**: Checkboxes only toggle when clicked directly (not on entire row)
-- **Optimized for HDD**: Reduced thread count (4-8) prevents slowdown after 200+ files
-- **Memory optimization**: Improved RAM usage, especially on Windows 7
 
 ### ✅ File Management
 - **2-Tab Interface**: Separate tabs for Scan and Queue
@@ -296,19 +249,6 @@ The `rename_log.json` file stores all operations:
 
 ---
 
-## Performance Comparison
-
-| Operation | PowerShell (Legacy) | v3.0.1 (SharpCompress) | v3.1.0 (7-Zip CLI) | Improvement |
-|-----------|---------------------|------------------------|---------------------|-------------|
-| Scan 2300 files (HDD) | Hangs/crashes | **58 minutes** | **3-8 minutes** | **12-20x faster** |
-| Scan 3000 files (SSD) | 30 minutes | 5-10 minutes | **30-90 seconds** | **20-60x faster** |
-| Undo 100 files | 4-5 minutes | <5 seconds | <1 second | **300x faster** |
-| Test new suffix | Full rescan | Full rescan | **Instant** | **∞x faster** |
-| UI Responsiveness | Blocked | Responsive | Responsive | **100% better** |
-| Selections after undo | Lost | Lost | **Preserved** | **New feature** |
-
----
-
 ## Building & Publishing
 
 ### Build Debug
@@ -386,7 +326,6 @@ The original [RarRenamer](https://github.com/L-at-nnes/RarRenamer) PowerShell ve
 - ✅ 60x faster performance overall
 - ✅ 10-20x faster scanning (7-Zip CLI)
 - ✅ Modern WPF UI with dark theme
-- ✅ No library dependencies (uses 7-Zip CLI like PowerShell version)
 - ✅ Single-click selection
 - ✅ Real-time prefix/suffix updates
 - ✅ Asynchronous operations (responsive UI)
@@ -428,23 +367,23 @@ Free to use and modify.
 
 ## Version History
 
-- **v3.4.1** (2025-01-12): UX improvements - Multi-selection (Ctrl/Shift), GridSplitter, double-click to open, optimized logging
-- **v3.4.0** (2025-01-12): Debug & Queue system - Real-time logging, debug file export, queue persistence, 2-tab interface
-- **v3.2.0** (2025-01-12): Major UX improvements - Pause/Resume, editable folder path, optimized HDD performance (4-8 threads), standard checkbox behavior, reduced memory usage
-- **v3.1.2** (2025-01-XX): Added manual thread control with ▲▼ buttons, increased default HDD threads to 16
-- **v3.1.1** (2025-01-XX): Critical fixes - Process zombie cleanup, race condition fix, async improvements
-- **v3.1.0** (2025-01-XX): Major performance overhaul - 7-Zip CLI integration, instant refresh after undo, drive detection
-- **v3.0.1** (2025-01-XX): Critical performance fix - Added parallelism control, timeout protection, cancel button
-- **v3.0.0** (2025-11-24): Complete rewrite in C# WPF .NET 8 with 60x performance improvement
-- **v2.2** (2025-11-24): PowerShell - Automatic UI mode detection (deprecated)
-- **v2.1** (2025-11-19): PowerShell - Windows 7 compatibility (deprecated)
-- **v2.0** (2025-11-18): PowerShell - Added checkboxes, logging/rollback (deprecated)
+- **v3.4.1** : UX improvements - Multi-selection (Ctrl/Shift), GridSplitter, double-click to open, optimized logging
+- **v3.4.0** : Debug & Queue system - Real-time logging, debug file export, queue persistence, 2-tab interface
+- **v3.2.0** : Major UX improvements - Pause/Resume, editable folder path, optimized HDD performance (4-8 threads), standard checkbox behavior, reduced memory usage
+- **v3.1.2** : Added manual thread control with ▲▼ buttons, increased default HDD threads to 16
+- **v3.1.1** : Critical fixes - Process zombie cleanup, race condition fix, async improvements
+- **v3.1.0** : Major performance overhaul - 7-Zip CLI integration, instant refresh after undo, drive detection
+- **v3.0.1** : Critical performance fix - Added parallelism control, timeout protection, cancel button
+- **v3.0.0** : Complete rewrite in C# WPF .NET 8 with 60x performance improvement
+- **v2.2** : PowerShell - Automatic UI mode detection (deprecated)
+- **v2.1** : PowerShell - Windows 7 compatibility (deprecated)
+- **v2.0** : PowerShell - Added checkboxes, logging/rollback (deprecated)
 - **v1.0**: PowerShell - Initial release (deprecated)
 
 ---
 
 <p align="center">
-  <strong>Made with ❤️ using C# and WPF</strong>
+  <strong>Made with 💪 using C# and WPF</strong>
 </p>
 
 <p align="center">
