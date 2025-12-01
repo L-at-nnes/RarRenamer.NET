@@ -21,11 +21,12 @@ namespace RarRenamer.Services
                 
                 if (isSSD)
                 {
-                    return cpuCores * 4;
+                    return Math.Min(cpuCores * 4, 32);
                 }
                 else
                 {
-                    return Math.Max(16, cpuCores);
+                    // Pour HDD, limiter à 4-8 threads pour éviter la surcharge
+                    return Math.Min(Math.Max(4, cpuCores / 2), 8);
                 }
             }
             catch

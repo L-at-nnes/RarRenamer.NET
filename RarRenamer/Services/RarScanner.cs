@@ -50,7 +50,7 @@ namespace RarRenamer.Services
             return null;
         }
 
-        public static async Task<ScanResult> ScanArchiveAsync(string filePath)
+        public static async Task<ScanResult> ScanArchiveAsync(string filePath, int timeoutSeconds = 60)
         {
             if (_sevenZipPath == null)
             {
@@ -61,7 +61,7 @@ namespace RarRenamer.Services
                 };
             }
 
-            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
             
             try
             {
@@ -88,39 +88,47 @@ namespace RarRenamer.Services
 
                         process.Start();
                         
-                        var outputTask = process.StandardOutput.ReadToEndAsync();
-                        var errorTask = process.StandardError.ReadToEndAsync();
+                        // Lecture optimisée ligne par ligne au lieu de tout charger en mémoire
+                        var outputLines = new List<string>();
+                        string? line;
+                        while ((line = await process.StandardOutput.ReadLineAsync()) != null)
+                        {
+                            outputLines.Add(line);
+                        }
                         
-                        var processExitTask = process.WaitForExitAsync(cancellationTokenSource.Token);
+                        string error = await process.StandardError.ReadToEndAsync();
                         
-                        await Task.WhenAll(outputTask, errorTask, processExitTask);
-
-                        string output = await outputTask;
-                        string error = await errorTask;
+                        await process.WaitForExitAsync(cancellationTokenSource.Token);
 
                         if (process.ExitCode != 0)
                         {
                             if (error.Contains("password", StringComparison.OrdinalIgnoreCase) || 
-                                error.Contains("encrypted", StringComparison.OrdinalIgnoreCase))
+                                error.Contains("encrypted", StringComparison.OrdinalIgnoreCase) ||
+                                error.Contains("wrong password", StringComparison.OrdinalIgnoreCase))
                             {
                                 result.Status = "?? Password protected";
                                 result.IsPasswordProtected = true;
                             }
+                            else if (error.Contains("CRC Failed", StringComparison.OrdinalIgnoreCase) ||
+                                     error.Contains("Data Error", StringComparison.OrdinalIgnoreCase))
+                            {
+                                result.Status = "? Corrupted (CRC/Data error)";
+                                result.IsCorrupted = true;
+                            }
                             else
                             {
-                                result.Status = "? Corrupted archive";
+                                result.Status = "? Archive error";
                                 result.IsCorrupted = true;
                             }
                             return result;
                         }
 
-                        var lines = output.Split('\n');
                         string? currentPath = null;
                         bool? isFolder = null;
 
-                        foreach (var line in lines)
+                        foreach (var outputLine in outputLines)
                         {
-                            var trimmed = line.Trim();
+                            var trimmed = outputLine.Trim();
 
                             if (trimmed.StartsWith("Path = "))
                             {
@@ -177,7 +185,7 @@ namespace RarRenamer.Services
             {
                 return new ScanResult
                 {
-                    Status = "?? Timeout (file took too long)",
+                    Status = $"?? Timeout (>{timeoutSeconds}s)",
                     IsCorrupted = true
                 };
             }

@@ -52,25 +52,47 @@ A high-performance WPF application built with .NET 8 to rename RAR archives base
 - **Instant undo**: Restore operations in <1 second
 - **Real-time prefix/suffix updates**: No rescanning needed
 - **Asynchronous operations**: UI stays responsive during all operations
-- **Smart parallelism**: Automatically adjusts to drive type (SSD: high threads, HDD: low threads)
+- **Smart parallelism**: Automatically adjusts to drive type (SSD: 4-32 threads, HDD: 4-8 threads)
 - **Manual thread control**: Adjust parallelism with ▲▼ buttons (hold for continuous increment)
-- **Timeout protection**: 30-second timeout per file prevents hanging
+- **Timeout protection**: 60-second timeout per file prevents hanging (optimized for slow drives)
 - **Batch UI updates**: Updates in groups of 50 for better performance
 
+### ✨ New in v3.4.0
+- **2-Tab Interface**: Separate tabs for Scanning and Queue management
+- **Queue System**: Add files to a persistent queue, rename them later
+- **Queue Persistence**: Queue survives application restarts (`queue.json`)
+- **Real-time Logging**: Live console showing all operations in the UI
+- **Debug File Export**: Optional `debug_log.txt` with complete stack traces
+- **Error Bypass**: Corrupted/password-protected files don't block other threads
+
+### ✨ New in v3.2.0
+- **Pause/Resume**: Pause and resume scans at any time without losing progress
+- **Editable folder path**: Type or paste folder paths directly (no more browse-only)
+- **Standard checkbox behavior**: Checkboxes only toggle when clicked directly (not on entire row)
+- **Optimized for HDD**: Reduced thread count (4-8) prevents slowdown after 200+ files
+- **Memory optimization**: Improved RAM usage, especially on Windows 7
+
 ### ✅ File Management
+- **2-Tab Interface**: Separate tabs for Scan and Queue
+- **Queue System**: Add scanned files to a persistent queue
 - Individual checkbox for each file in the grid
 - Select All / Deselect All buttons for quick selection
-- Single-click on row to toggle selection
+- Standard checkbox behavior (click only on checkbox, not entire row)
+- **Pause button** to pause scans and resume later
 - **Cancel button** to stop scans anytime
+- **Queue persistence** in `queue.json` (survives reboots)
 - **Selections preserved** after undo operations
 - Precise control over which files to rename
 
 ### 📝 Logging & Rollback System
+- **Real-time Logging**: Live console in the UI showing all operations
+- **Debug File Export**: Optional `debug_log.txt` with complete details
 - **Automatic Logging**: All rename operations logged to `rename_log.json`
 - **Detailed Log Entries**: Timestamp, old/new paths, success status, error messages
 - **Selective Undo**: Choose which operations to undo with checkboxes
 - **Persistent Log**: Works across application restarts
 - **Smart Refresh**: After undo, list refreshes instantly without rescanning
+- **Queue persistence**: Queue saved in `queue.json` and survives reboots
 
 ### 🎨 Prefix & Suffix System
 - **Prefix Input**: Add text before the folder name
@@ -102,28 +124,32 @@ If you want to run on Windows 7, you'll need:
 
 ## 📥 Installation
 
+### 🚀 Quick Download (Latest v3.4.0)
+
+**Direct download from GitHub repository:**
+
+| Version | Size | Download Link | Requirements |
+|---------|------|---------------|--------------|
+| **Self-Contained** | ~156 MB | **[Download](https://github.com/L-at-nnes/RarRenamer.NET/raw/main/publish/self-contained/RarRenamer.exe)** | 7-Zip only |
+| **Framework-Dependent** | ~1.6 MB | **[Download](https://github.com/L-at-nnes/RarRenamer.NET/raw/main/publish/framework-dependent/RarRenamer.exe)** | 7-Zip + .NET 8 |
+
+---
+
 ### Option 1: Self-Contained (Recommended - No .NET Required)
 
-**⬇️ [Download from MediaFire (~66 MB)](https://www.mediafire.com/file/qj5mh6uyku90bsl/RarRenamer.NET-v3.1.1-self-contained.zip/file)**
-
-1. Download the ZIP file from MediaFire
-2. Extract `RarRenamer.exe`
-3. **Install 7-Zip** from [7-zip.org](https://www.7-zip.org/) if not already installed
-4. Run the application
-5. **No .NET Runtime needed!** ✨
-
-> **Note:** Due to GitHub's 25 MB file size limit for releases, the self-contained version is hosted on MediaFire.
+1. **[Download RarRenamer.exe](https://github.com/L-at-nnes/RarRenamer.NET/raw/main/publish/self-contained/RarRenamer.exe)** (~156 MB)
+2. **Install 7-Zip** from [7-zip.org](https://www.7-zip.org/) if not already installed
+3. Run the application
+4. **No .NET Runtime needed!** ✨
 
 ---
 
 ### Option 2: Framework-Dependent (Smaller - Requires .NET 8)
 
-**⬇️ Download from [Releases](https://github.com/L-at-nnes/RarRenamer.NET/releases) (~1 MB)**
-
 1. **Install 7-Zip** from [7-zip.org](https://www.7-zip.org/)
 2. Install [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) if not already installed
-3. Download `RarRenamer.NET-v3.1.0-framework-dependent.zip` from GitHub Releases
-4. Extract and run `RarRenamer.exe`
+3. **[Download RarRenamer.exe](https://github.com/L-at-nnes/RarRenamer.NET/raw/main/publish/framework-dependent/RarRenamer.exe)** (~1.6 MB)
+4. Run the application
 
 **Windows 7 Users:** Also install [Visual C++ Redistributable 2015-2022](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 
@@ -143,39 +169,47 @@ dotnet run
 ## Usage
 
 1. **Install 7-Zip** if not already installed ([Download](https://www.7-zip.org/))
-2. **Select folder**: Click "Browse" to choose a folder containing RAR files
+2. **Select folder**: 
+   - Click "Browse" to choose a folder containing RAR files
+   - **OR** type/paste the folder path directly into the text field
 3. **Adjust threads** (optional):
-   - Auto-detected value shown (e.g., 16 for HDD, 96 for SSD)
+   - Auto-detected value shown (e.g., 4-8 for HDD, 16-32 for SSD)
    - Use ▲▼ buttons to adjust (hold to increment/decrement continuously)
    - Or type a number directly (1-256)
-   - Higher values = more parallel 7z processes (faster on capable systems)
 4. **Scan archives**: Click "Scan Archives"
-   - Status shows actual threads used (e.g., "threads: 32")
-   - **Cancel anytime**: Click red "Cancel Scan" button if needed
+   - Status shows actual threads used (e.g., "threads: 8")
+   - **Pause anytime**: Click "Pause Scan" to pause without losing progress
+   - **Resume anytime**: Click "Resume Scan" to continue
+   - **Cancel anytime**: Click "Cancel Scan" to stop completely
+   - **Enable Debug Log**: Check to export detailed logs to `debug_log.txt`
 5. **Configure prefix/suffix** (optional):
    - Enter prefix (e.g., "P-" or "MyApp ")
    - Enter suffix (e.g., "-v2" or " Portable")
-   - **Test instantly**: After first scan, changing prefix/suffix is instant!
-6. **Select files**: 
-   - Click on rows to toggle selection
-   - Use "Select All" or "Deselect All" buttons
-7. **Rename**: Click "Rename Selected"
+   - **Test instantly**: Changes apply to all files in real-time
+6. **Add to Queue**: 
+   - Select files you want to rename
+   - Click "➕ Add to Queue"
+   - Files are added to the persistent queue
+7. **Go to Queue tab**:
+   - Review files in the queue
+   - Select/deselect items as needed
+   - Click "🚀 Rename Selected" to rename
 8. **Undo if needed**: 
-   - Click "Undo Operations" to revert changes
-   - **Selections are preserved!**
-   - **Test new suffix instantly** - no rescan needed!
+   - Click "↩️ Undo Operations" to revert changes
+   - **Queue persists** across application restarts
 
 ### Thread Count Recommendations
 
 | Storage Type | Recommended Threads | Notes |
 |--------------|---------------------|-------|
-| **NVMe SSD** | 64-128 | High parallelism works well |
-| **SATA SSD** | 32-64 | Good balance |
-| **HDD 7200** | 16-32 | Start with auto (16), increase if CPU/RAM low |
-| **HDD 5400** | 16-24 | Conservative for slow drives |
-| **Network/NAS** | 8-16 | Lower to avoid network saturation |
+| **NVMe SSD** | 16-32 | High parallelism works well |
+| **SATA SSD** | 16-32 | Good balance |
+| **HDD 7200** | 4-8 | **Optimized to prevent slowdown** |
+| **HDD 5400** | 4-6 | Conservative for slow drives |
+| **Network/NAS** | 4-8 | Lower to avoid network saturation |
+| **USB 2.0 HDD** | 4 | Very conservative for slow connections |
 
-**Tip:** If scan seems slow and CPU usage is low (< 10%), try increasing threads. If system becomes unresponsive, decrease threads.
+**Tip:** The application auto-detects your drive type and sets optimal threads. For HDD, it now uses 4-8 threads to prevent the slowdown that occurred after 200-250 files in previous versions.
 
 ---
 
@@ -382,6 +416,8 @@ Free to use and modify.
 
 ## Version History
 
+- **v3.4.0** (2025-01-12): Debug & Queue system - Real-time logging, debug file export, queue persistence, 2-tab interface
+- **v3.2.0** (2025-01-12): Major UX improvements - Pause/Resume, editable folder path, optimized HDD performance (4-8 threads), standard checkbox behavior, reduced memory usage
 - **v3.1.2** (2025-01-XX): Added manual thread control with ▲▼ buttons, increased default HDD threads to 16
 - **v3.1.1** (2025-01-XX): Critical fixes - Process zombie cleanup, race condition fix, async improvements
 - **v3.1.0** (2025-01-XX): Major performance overhaul - 7-Zip CLI integration, instant refresh after undo, drive detection

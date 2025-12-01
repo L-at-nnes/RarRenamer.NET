@@ -13,37 +13,92 @@ namespace RarRenamer;
 public partial class MainWindow : Window
 {
     private ObservableCollection<RarFileItem> _rarFiles = new ObservableCollection<RarFileItem>();
+    private ObservableCollection<QueueItem> _queueItems = new ObservableCollection<QueueItem>();
     private LogManager _logManager;
+    private QueueManager _queueManager;
     private string _selectedFolder = string.Empty;
     private bool _isScanning = false;
+    private bool _isPaused = false;
     private CancellationTokenSource? _cancellationTokenSource;
     private int _autoDetectedThreads = 16;
     private System.Windows.Threading.DispatcherTimer? _threadButtonTimer;
     private int _threadButtonDirection = 0;
+    private bool _debugLogEnabled = false;
+    private readonly string _debugLogPath = "debug_log.txt";
+    private readonly object _logLock = new object();
 
     public MainWindow()
     {
         InitializeComponent();
         dgResults.ItemsSource = _rarFiles;
+        dgQueue.ItemsSource = _queueItems;
         _logManager = new LogManager("rename_log.json");
+        _queueManager = new QueueManager("queue.json");
         
         _selectedFolder = AppDomain.CurrentDomain.BaseDirectory;
         txtFolder.Text = _selectedFolder;
 
         _autoDetectedThreads = DriveDetector.GetOptimalParallelism(_selectedFolder);
         txtThreads.Text = _autoDetectedThreads.ToString();
+
+        // Charger la queue au démarrage
+        LoadQueueFromFile();
+
+        // Initialiser le log
+        AddLog("Application started");
+    }
+
+    private void AddLog(string message)
+    {
+        var timestamp = DateTime.Now.ToString("HH:mm:ss");
+        var logEntry = $"[{timestamp}] {message}";
+        
+        Dispatcher.InvokeAsync(() =>
+        {
+            txtLog.AppendText(logEntry + Environment.NewLine);
+            scrollViewerLog.ScrollToEnd();
+        });
+
+        if (_debugLogEnabled)
+        {
+            lock (_logLock)
+            {
+                try
+                {
+                    File.AppendAllText(_debugLogPath, logEntry + Environment.NewLine);
+                }
+                catch { }
+            }
+        }
+    }
+
+    private void ChkEnableDebugLog_Changed(object sender, RoutedEventArgs e)
+    {
+        _debugLogEnabled = chkEnableDebugLog.IsChecked == true;
+        
+        if (_debugLogEnabled)
+        {
+            try
+            {
+                File.WriteAllText(_debugLogPath, $"=== Debug Log Started: {DateTime.Now} ===" + Environment.NewLine);
+                AddLog($"Debug logging enabled → {_debugLogPath}");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"ERROR: Could not create debug log file: {ex.Message}");
+                chkEnableDebugLog.IsChecked = false;
+                _debugLogEnabled = false;
+            }
+        }
+        else
+        {
+            AddLog("Debug logging disabled");
+        }
     }
 
     private void DataGridRow_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (sender is DataGridRow row && row.Item is RarFileItem item)
-        {
-            if (item.CanRename)
-            {
-                item.IsSelected = !item.IsSelected;
-                e.Handled = true;
-            }
-        }
+        // Cette méthode n'est plus utilisée - comportement standard de la checkbox
     }
 
     private int? ParseThreadsInput()
@@ -147,6 +202,22 @@ public partial class MainWindow : Window
         }
     }
 
+    private void TxtFolder_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        // Mettre à jour le dossier sélectionné quand l'utilisateur tape/colle
+        string path = txtFolder.Text.Trim();
+        if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
+        {
+            _selectedFolder = path;
+            _autoDetectedThreads = DriveDetector.GetOptimalParallelism(_selectedFolder);
+            
+            if (!int.TryParse(txtThreads.Text, out _))
+            {
+                txtThreads.Text = _autoDetectedThreads.ToString();
+            }
+        }
+    }
+
     private void TxtPrefixSuffix_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (_rarFiles.Count == 0) return;
@@ -171,6 +242,12 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (!Directory.Exists(_selectedFolder))
+        {
+            MessageBox.Show("The specified folder does not exist.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         if (_isScanning)
         {
             MessageBox.Show("Scan in progress...", "Warning", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -180,11 +257,17 @@ public partial class MainWindow : Window
         try
         {
             _isScanning = true;
+            _isPaused = false;
             _cancellationTokenSource = new CancellationTokenSource();
             _rarFiles.Clear();
 
+            AddLog($"Starting scan in folder: {_selectedFolder}");
+
             btnBrowse.IsEnabled = false;
             btnScan.IsEnabled = false;
+            btnPauseResume.IsEnabled = true;
+            btnPauseResume.Visibility = Visibility.Visible;
+            btnPauseResume.Content = "Pause Scan";
             btnCancel.IsEnabled = true;
             btnCancel.Visibility = Visibility.Visible;
             btnRename.IsEnabled = false;
@@ -193,9 +276,15 @@ public partial class MainWindow : Window
             btnDeselectAll.IsEnabled = false;
             txtPrefix.IsEnabled = false;
             txtSuffix.IsEnabled = false;
+            txtFolder.IsEnabled = false;
+            txtThreads.IsEnabled = false;
+            btnThreadsUp.IsEnabled = false;
+            btnThreadsDown.IsEnabled = false;
 
             var rarFilePaths = Directory.GetFiles(_selectedFolder, "*.rar", SearchOption.TopDirectoryOnly);
             int totalFiles = rarFilePaths.Length;
+
+            AddLog($"Found {totalFiles} RAR files");
 
             if (totalFiles == 0)
             {
@@ -204,6 +293,7 @@ public partial class MainWindow : Window
             }
 
             int optimalParallelism = DriveDetector.GetOptimalParallelism(_selectedFolder, ParseThreadsInput());
+            AddLog($"Using {optimalParallelism} threads");
             lblStatus.Content = $"Scanning {totalFiles} RAR files (threads: {optimalParallelism})...";
             progressBar.Visibility = Visibility.Visible;
             progressBar.Maximum = totalFiles;
@@ -226,8 +316,22 @@ public partial class MainWindow : Window
                 },
                 async (filePath, cancellationToken) =>
                 {
+                    // Vérifier si en pause
+                    while (_isPaused && !cancellationToken.IsCancellationRequested)
+                    {
+                        await Task.Delay(100, CancellationToken.None);
+                    }
+
+                    if (cancellationToken.IsCancellationRequested)
+                        return;
+
                     var fileName = Path.GetFileName(filePath);
-                    var scanResult = await RarScanner.ScanArchiveAsync(filePath);
+                    
+                    AddLog($"Scanning: {fileName}");
+                    
+                    var scanResult = await RarScanner.ScanArchiveAsync(filePath, timeoutSeconds: 60);
+
+                    AddLog($"  → {fileName}: {scanResult.Status}");
 
                     var item = new RarFileItem
                     {
@@ -288,26 +392,35 @@ public partial class MainWindow : Window
 
             lblStatus.Content = $"Scan complete: {_rarFiles.Count(r => r.CanRename)}/{totalFiles} files can be renamed";
             progressBar.Visibility = Visibility.Collapsed;
+
+            AddLog($"Scan complete: {_rarFiles.Count(r => r.CanRename)}/{totalFiles} files ready to rename");
         }
         catch (OperationCanceledException)
         {
-            lblStatus.Content = "Scan cancelled by user";
+            string statusMsg = _isPaused ? "Scan cancelled while paused" : "Scan cancelled by user";
+            lblStatus.Content = statusMsg;
             progressBar.Visibility = Visibility.Collapsed;
+            AddLog(statusMsg);
             MessageBox.Show("Scan was cancelled.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
+            AddLog($"ERROR during scan: {ex.Message}");
+            AddLog($"Stack trace: {ex.StackTrace}");
             MessageBox.Show($"Error during scan: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             lblStatus.Content = "Error during scan";
         }
         finally
         {
             _isScanning = false;
+            _isPaused = false;
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
             
             btnBrowse.IsEnabled = true;
             btnScan.IsEnabled = true;
+            btnPauseResume.IsEnabled = false;
+            btnPauseResume.Visibility = Visibility.Collapsed;
             btnCancel.IsEnabled = false;
             btnCancel.Visibility = Visibility.Collapsed;
             btnRename.IsEnabled = true;
@@ -316,6 +429,10 @@ public partial class MainWindow : Window
             btnDeselectAll.IsEnabled = true;
             txtPrefix.IsEnabled = true;
             txtSuffix.IsEnabled = true;
+            txtFolder.IsEnabled = true;
+            txtThreads.IsEnabled = true;
+            btnThreadsUp.IsEnabled = true;
+            btnThreadsDown.IsEnabled = true;
             progressBar.Visibility = Visibility.Collapsed;
         }
     }
@@ -326,7 +443,29 @@ public partial class MainWindow : Window
         {
             _cancellationTokenSource.Cancel();
             btnCancel.IsEnabled = false;
+            btnPauseResume.IsEnabled = false;
             lblStatus.Content = "Cancelling scan...";
+        }
+    }
+
+    private void BtnPauseResume_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isScanning)
+        {
+            _isPaused = !_isPaused;
+            
+            if (_isPaused)
+            {
+                btnPauseResume.Content = "Resume Scan";
+                lblStatus.Content = "Scan paused...";
+                AddLog("Scan paused by user");
+            }
+            else
+            {
+                btnPauseResume.Content = "Pause Scan";
+                lblStatus.Content = "Scanning...";
+                AddLog("Scan resumed by user");
+            }
         }
     }
 
@@ -348,16 +487,16 @@ public partial class MainWindow : Window
 
     private void BtnRename_Click(object sender, RoutedEventArgs e)
     {
-        var selectedItems = _rarFiles.Where(r => r.IsSelected && r.CanRename).ToList();
+        var selectedItems = _queueItems.Where(q => q.IsSelected).ToList();
 
         if (selectedItems.Count == 0)
         {
-            MessageBox.Show("No files selected for renaming.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("No files selected for renaming in queue.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         var result = MessageBox.Show(
-            $"Rename {selectedItems.Count} file(s)?",
+            $"Rename {selectedItems.Count} file(s) from queue?",
             "Confirmation",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question
@@ -365,11 +504,14 @@ public partial class MainWindow : Window
 
         if (result != MessageBoxResult.Yes) return;
 
+        AddLog($"Starting rename operation for {selectedItems.Count} files...");
+
         try
         {
             int successCount = 0;
             int errorCount = 0;
             var logEntries = new List<LogEntry>();
+            var itemsToRemove = new List<QueueItem>();
 
             foreach (var item in selectedItems)
             {
@@ -379,11 +521,30 @@ public partial class MainWindow : Window
                     string directory = Path.GetDirectoryName(oldPath) ?? string.Empty;
                     string newPath = Path.Combine(directory, item.NewName);
 
+                    AddLog($"Renaming: {item.CurrentName} → {item.NewName}");
+
+                    if (!File.Exists(oldPath))
+                    {
+                        errorCount++;
+                        AddLog($"  ERROR: Source file not found: {oldPath}");
+                        logEntries.Add(new LogEntry
+                        {
+                            Timestamp = DateTime.Now,
+                            OldPath = oldPath,
+                            NewPath = newPath,
+                            OldName = item.CurrentName,
+                            NewName = item.NewName,
+                            Success = false,
+                            Error = "Source file no longer exists"
+                        });
+                        itemsToRemove.Add(item);
+                        continue;
+                    }
+
                     if (File.Exists(newPath))
                     {
-                        item.Status = "❌ Target file already exists";
                         errorCount++;
-
+                        AddLog($"  ERROR: Target already exists: {newPath}");
                         logEntries.Add(new LogEntry
                         {
                             Timestamp = DateTime.Now,
@@ -399,11 +560,9 @@ public partial class MainWindow : Window
 
                     File.Move(oldPath, newPath);
 
-                    item.CurrentName = item.NewName;
-                    item.FullPath = newPath;
-                    item.Status = "✅ Renamed";
-                    item.IsSelected = false;
                     successCount++;
+                    itemsToRemove.Add(item);
+                    AddLog($"  SUCCESS: Renamed to {item.NewName}");
 
                     logEntries.Add(new LogEntry
                     {
@@ -417,9 +576,8 @@ public partial class MainWindow : Window
                 }
                 catch (Exception ex)
                 {
-                    item.Status = $"❌ Error: {ex.Message}";
                     errorCount++;
-
+                    AddLog($"  ERROR: {ex.Message}");
                     logEntries.Add(new LogEntry
                     {
                         Timestamp = DateTime.Now,
@@ -433,14 +591,24 @@ public partial class MainWindow : Window
                 }
             }
 
-            _logManager.SaveLogs(logEntries);
+            // Retirer les items renommés avec succès de la queue
+            foreach (var item in itemsToRemove)
+            {
+                _queueItems.Remove(item);
+            }
 
+            _logManager.SaveLogs(logEntries);
+            SaveQueueToFile();
+            UpdateQueueCount();
+
+            AddLog($"Rename complete: {successCount} success, {errorCount} errors");
             string message = $"Rename complete:\n✅ {successCount} success\n❌ {errorCount} error(s)";
             MessageBox.Show(message, "Result", MessageBoxButton.OK, MessageBoxImage.Information);
-            lblStatus.Content = $"Rename complete: {successCount} success, {errorCount} error(s)";
         }
         catch (Exception ex)
         {
+            AddLog($"CRITICAL ERROR during rename: {ex.Message}");
+            AddLog($"Stack trace: {ex.StackTrace}");
             MessageBox.Show($"Error during rename: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -489,5 +657,109 @@ public partial class MainWindow : Window
         }
 
         lblStatus.Content = $"File list refreshed: {_rarFiles.Count} files";
+    }
+
+    // ==================== QUEUE MANAGEMENT ====================
+
+    private void LoadQueueFromFile()
+    {
+        var items = _queueManager.LoadQueue();
+        _queueItems.Clear();
+        foreach (var item in items)
+        {
+            _queueItems.Add(item);
+        }
+        UpdateQueueCount();
+    }
+
+    private void SaveQueueToFile()
+    {
+        _queueManager.SaveQueue(_queueItems.ToList());
+    }
+
+    private void UpdateQueueCount()
+    {
+        lblQueueCount.Content = $"Queue: {_queueItems.Count} files";
+    }
+
+    private void BtnAddToQueue_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedItems = _rarFiles.Where(r => r.IsSelected && r.CanRename).ToList();
+
+        if (selectedItems.Count == 0)
+        {
+            MessageBox.Show("No files selected to add to queue.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        AddLog($"Adding {selectedItems.Count} files to queue...");
+
+        int addedCount = 0;
+        foreach (var item in selectedItems)
+        {
+            // Vérifier si déjà dans la queue
+            if (_queueItems.Any(q => q.FullPath == item.FullPath))
+                continue;
+
+            var queueItem = new QueueItem
+            {
+                CurrentName = item.CurrentName,
+                NewName = item.NewName,
+                FullPath = item.FullPath,
+                IsSelected = true
+            };
+            _queueItems.Add(queueItem);
+            addedCount++;
+        }
+
+        SaveQueueToFile();
+        UpdateQueueCount();
+        AddLog($"Added {addedCount} files to queue (total: {_queueItems.Count})");
+        MessageBox.Show($"{addedCount} file(s) added to queue!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void BtnClearQueue_Click(object sender, RoutedEventArgs e)
+    {
+        if (_queueItems.Count == 0)
+        {
+            MessageBox.Show("Queue is already empty.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var result = MessageBox.Show(
+            $"Clear all {_queueItems.Count} items from queue?",
+            "Confirmation",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question
+        );
+
+        if (result == MessageBoxResult.Yes)
+        {
+            _queueItems.Clear();
+            _queueManager.ClearQueue();
+            UpdateQueueCount();
+        }
+    }
+
+    private void BtnLoadQueue_Click(object sender, RoutedEventArgs e)
+    {
+        LoadQueueFromFile();
+        MessageBox.Show($"Queue loaded: {_queueItems.Count} file(s)", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void BtnQueueSelectAll_Click(object sender, RoutedEventArgs e)
+    {
+        foreach (var item in _queueItems)
+        {
+            item.IsSelected = true;
+        }
+    }
+
+    private void BtnQueueDeselectAll_Click(object sender, RoutedEventArgs e)
+    {
+        foreach (var item in _queueItems)
+        {
+            item.IsSelected = false;
+        }
     }
 }

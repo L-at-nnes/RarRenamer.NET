@@ -46,13 +46,43 @@
             <Setter Property="FontSize" Value="13"/>
         </Style>
 
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#F1F1F1"/>
+            <Setter Property="Background" Value="#2D2D30"/>
+        </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="#1E1E1E"/>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Foreground" Value="#F1F1F1"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border Background="{TemplateBinding Background}" BorderThickness="0" CornerRadius="3,3,0,0" Padding="{TemplateBinding Padding}" Margin="2,0">
+                            <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#007ACC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style TargetType="DataGrid">
             <Setter Property="Background" Value="#1E1E1E"/>
             <Setter Property="Foreground" Value="#F1F1F1"/>
             <Setter Property="BorderBrush" Value="#3F3F46"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="RowBackground" Value="#1E1E1E"/>
-            <Setter Property="AlternatingRowBackground" Value="#252526"/>
+            <Setter Property="RowBackground" Value="#252526"/>
+            <Setter Property="AlternatingRowBackground" Value="#2D2D30"/>
             <Setter Property="GridLinesVisibility" Value="None"/>
             <Setter Property="HeadersVisibility" Value="Column"/>
             <Setter Property="AutoGenerateColumns" Value="False"/>
@@ -70,11 +100,10 @@
         </Style>
 
         <Style TargetType="DataGridRow">
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="DataGridRow_PreviewMouseLeftButtonDown"/>
+            <Setter Property="Background" Value="#252526"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#2A2D2E"/>
+                    <Setter Property="Background" Value="#3E3E42"/>
                 </Trigger>
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="Background" Value="#094771"/>
@@ -84,6 +113,8 @@
 
         <Style TargetType="DataGridCell">
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="#F1F1F1"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DataGridCell">
@@ -93,6 +124,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="#F1F1F1"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style TargetType="ProgressBar">
@@ -103,65 +140,114 @@
     </Window.Resources>
 
     <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        <TabControl>
+            <!-- TAB 1: SCAN -->
+            <TabItem Header="📂 Scan" FontSize="14">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-            <Label Content="Folder:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <TextBox x:Name="txtFolder" Width="750" VerticalAlignment="Center" IsReadOnly="True"/>
-            <Button x:Name="btnBrowse" Content="Browse" Margin="10,0,0,0" Width="100" Click="BtnBrowse_Click"/>
-        </StackPanel>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+                        <Label Content="Folder:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBox x:Name="txtFolder" Width="750" VerticalAlignment="Center" TextChanged="TxtFolder_TextChanged"/>
+                        <Button x:Name="btnBrowse" Content="Browse" Margin="10,0,0,0" Width="100" Click="BtnBrowse_Click"/>
+                    </StackPanel>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15">
-            <Label Content="Prefix:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <TextBox x:Name="txtPrefix" Width="200" VerticalAlignment="Center" TextChanged="TxtPrefixSuffix_TextChanged"/>
-            <Label Content="Suffix:" VerticalAlignment="Center" Margin="30,0,10,0"/>
-            <TextBox x:Name="txtSuffix" Width="200" VerticalAlignment="Center" TextChanged="TxtPrefixSuffix_TextChanged"/>
-            <Label Content="Threads:" VerticalAlignment="Center" Margin="30,0,10,0"/>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="60"/>
-                    <ColumnDefinition Width="20"/>
-                </Grid.ColumnDefinitions>
-                <TextBox x:Name="txtThreads" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Center" 
-                         PreviewTextInput="TxtThreads_PreviewTextInput" TextChanged="TxtThreads_TextChanged"/>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <Button Content="▲" Width="20" Height="15" Padding="0" FontSize="8" Click="BtnThreadsUp_Click" 
-                            PreviewMouseDown="BtnThreadsUpDown_PreviewMouseDown" PreviewMouseUp="BtnThreadsUpDown_PreviewMouseUp"/>
-                    <Button Content="▼" Width="20" Height="15" Padding="0" FontSize="8" Click="BtnThreadsDown_Click" Margin="0,0,0,0"
-                            PreviewMouseDown="BtnThreadsUpDown_PreviewMouseDown" PreviewMouseUp="BtnThreadsUpDown_PreviewMouseUp"/>
-                </StackPanel>
-            </Grid>
-        </StackPanel>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15">
+                        <Label Content="Prefix:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBox x:Name="txtPrefix" Width="200" VerticalAlignment="Center" TextChanged="TxtPrefixSuffix_TextChanged"/>
+                        <Label Content="Suffix:" VerticalAlignment="Center" Margin="30,0,10,0"/>
+                        <TextBox x:Name="txtSuffix" Width="200" VerticalAlignment="Center" TextChanged="TxtPrefixSuffix_TextChanged"/>
+                        <Label Content="Threads:" VerticalAlignment="Center" Margin="30,0,10,0"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="20"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="txtThreads" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Center" 
+                                     PreviewTextInput="TxtThreads_PreviewTextInput" TextChanged="TxtThreads_TextChanged"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <Button x:Name="btnThreadsUp" Content="▲" Width="20" Height="15" Padding="0" FontSize="8" Click="BtnThreadsUp_Click" 
+                                        PreviewMouseDown="BtnThreadsUpDown_PreviewMouseDown" PreviewMouseUp="BtnThreadsUpDown_PreviewMouseUp"/>
+                                <Button x:Name="btnThreadsDown" Content="▼" Width="20" Height="15" Padding="0" FontSize="8" Click="BtnThreadsDown_Click" Margin="0,0,0,0"
+                                        PreviewMouseDown="BtnThreadsUpDown_PreviewMouseDown" PreviewMouseUp="BtnThreadsUpDown_PreviewMouseUp"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,15">
-            <Button x:Name="btnScan" Content="Scan Archives" Width="150" Click="BtnScan_Click"/>
-            <Button x:Name="btnCancel" Content="Cancel Scan" Width="150" Margin="10,0,0,0" Background="#D13438" Click="BtnCancel_Click" IsEnabled="False" Visibility="Collapsed"/>
-            <Label x:Name="lblStatus" Content="" Margin="15,0,0,0" Foreground="#4EC9B0"/>
-        </StackPanel>
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,15">
+                        <Button x:Name="btnScan" Content="Scan Archives" Width="150" Click="BtnScan_Click"/>
+                        <Button x:Name="btnPauseResume" Content="Pause Scan" Width="120" Margin="10,0,0,0" Background="#D17000" Click="BtnPauseResume_Click" IsEnabled="False" Visibility="Collapsed"/>
+                        <Button x:Name="btnCancel" Content="Cancel Scan" Width="120" Margin="10,0,0,0" Background="#D13438" Click="BtnCancel_Click" IsEnabled="False" Visibility="Collapsed"/>
+                        <Button x:Name="btnAddToQueue" Content="➕ Add to Queue" Width="150" Margin="10,0,0,0" Background="#0E7A0D" Click="BtnAddToQueue_Click"/>
+                        <CheckBox x:Name="chkEnableDebugLog" Content="📝 Enable Debug Log" Margin="20,0,0,0" VerticalAlignment="Center" Foreground="#F1F1F1" Checked="ChkEnableDebugLog_Changed" Unchecked="ChkEnableDebugLog_Changed"/>
+                        <Label x:Name="lblStatus" Content="" Margin="15,0,0,0" Foreground="#4EC9B0"/>
+                    </StackPanel>
 
-        <ProgressBar Grid.Row="3" x:Name="progressBar" Margin="0,0,0,15" IsIndeterminate="False" Visibility="Collapsed"/>
+                    <ProgressBar Grid.Row="3" x:Name="progressBar" Margin="0,0,0,15" IsIndeterminate="False" Visibility="Collapsed"/>
 
-        <DataGrid Grid.Row="4" x:Name="dgResults" Margin="0,0,0,15">
-            <DataGrid.Columns>
-                <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="60"/>
-                <DataGridTextColumn Header="Current Name" Binding="{Binding CurrentName}" Width="2*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="New Name" Binding="{Binding NewName}" Width="2*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" IsReadOnly="True"/>
-            </DataGrid.Columns>
-        </DataGrid>
+                    <!-- LOG EN TEMPS RÉEL -->
+                    <Border Grid.Row="4" BorderBrush="#3F3F46" BorderThickness="1" Background="#252526" Margin="0,0,0,10" MaxHeight="150">
+                        <ScrollViewer x:Name="scrollViewerLog" VerticalScrollBarVisibility="Auto">
+                            <TextBox x:Name="txtLog" IsReadOnly="True" TextWrapping="Wrap" Background="Transparent" 
+                                     Foreground="#D4D4D4" BorderThickness="0" Padding="10" FontFamily="Consolas" FontSize="11"/>
+                        </ScrollViewer>
+                    </Border>
 
-        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="btnSelectAll" Content="Select All" Width="120" Margin="0,0,10,0" Click="BtnSelectAll_Click"/>
-            <Button x:Name="btnDeselectAll" Content="Deselect All" Width="120" Margin="0,0,10,0" Click="BtnDeselectAll_Click"/>
-            <Button x:Name="btnRename" Content="Rename Selected" Width="150" Click="BtnRename_Click"/>
-            <Button x:Name="btnUndo" Content="Undo Operations" Width="150" Margin="10,0,0,0" Background="#D17000" Click="BtnUndo_Click"/>
-        </StackPanel>
+                    <DataGrid Grid.Row="5" x:Name="dgResults" Margin="0,0,0,15" Height="300">
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="60"/>
+                            <DataGridTextColumn Header="Current Name" Binding="{Binding CurrentName}" Width="2*" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="New Name" Binding="{Binding NewName}" Width="2*" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" IsReadOnly="True"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button x:Name="btnSelectAll" Content="Select All" Width="120" Margin="0,0,10,0" Click="BtnSelectAll_Click"/>
+                        <Button x:Name="btnDeselectAll" Content="Deselect All" Width="120" Margin="0,0,10,0" Click="BtnDeselectAll_Click"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 2: QUEUE -->
+            <TabItem Header="📋 Queue" FontSize="14">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+                        <Label x:Name="lblQueueCount" Content="Queue: 0 files" FontSize="16" FontWeight="Bold" Foreground="#4EC9B0"/>
+                        <Button x:Name="btnClearQueue" Content="🗑️ Clear Queue" Width="150" Margin="20,0,0,0" Background="#D13438" Click="BtnClearQueue_Click"/>
+                        <Button x:Name="btnLoadQueue" Content="📥 Load Queue" Width="150" Margin="10,0,0,0" Background="#007ACC" Click="BtnLoadQueue_Click"/>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1" x:Name="dgQueue" Margin="0,0,0,15">
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="60"/>
+                            <DataGridTextColumn Header="Current Name" Binding="{Binding CurrentName}" Width="2*" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="New Name" Binding="{Binding NewName}" Width="2*" IsReadOnly="True"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button x:Name="btnQueueSelectAll" Content="Select All" Width="120" Margin="0,0,10,0" Click="BtnQueueSelectAll_Click"/>
+                        <Button x:Name="btnQueueDeselectAll" Content="Deselect All" Width="120" Margin="0,0,10,0" Click="BtnQueueDeselectAll_Click"/>
+                        <Button x:Name="btnRename" Content="🚀 Rename Selected" Width="150" Background="#0E7A0D" Click="BtnRename_Click"/>
+                        <Button x:Name="btnUndo" Content="↩️ Undo Operations" Width="150" Margin="10,0,0,0" Background="#D17000" Click="BtnUndo_Click"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>
