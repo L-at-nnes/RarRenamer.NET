@@ -57,6 +57,14 @@ A high-performance WPF application built with .NET 8 to rename RAR archives base
 - **Timeout protection**: 60-second timeout per file prevents hanging (optimized for slow drives)
 - **Batch UI updates**: Updates in groups of 50 for better performance
 
+### ✨ New in v3.4.1
+- **Multi-selection with Ctrl/Shift**: Select multiple files at once (no more clicking one by one!)
+- **GridSplitter**: Resize log and file list panels to your preference
+- **Double-click to open**: Double-click any file to open it in Windows Explorer
+- **Optimized logging**: Limited to 500 lines max to reduce RAM usage
+- **Smoother scrolling**: Full virtualization enabled for better performance with large lists
+- **Undo window improved**: Ctrl/Shift selection also works in Undo Operations window
+
 ### ✨ New in v3.4.0
 - **2-Tab Interface**: Separate tabs for Scanning and Queue management
 - **Queue System**: Add files to a persistent queue, rename them later
@@ -124,23 +132,26 @@ If you want to run on Windows 7, you'll need:
 
 ## 📥 Installation
 
-### 🚀 Quick Download (Latest v3.4.0)
+### 🚀 Quick Download (Latest v3.4.1)
 
-**Direct download from GitHub repository:**
+**Download from GitHub Releases:**
 
-| Version | Size | Download Link | Requirements |
-|---------|------|---------------|--------------|
-| **Self-Contained** | ~156 MB | **[Download](https://github.com/L-at-nnes/RarRenamer.NET/raw/main/publish/self-contained/RarRenamer.exe)** | 7-Zip only |
-| **Framework-Dependent** | ~1.6 MB | **[Download](https://github.com/L-at-nnes/RarRenamer.NET/raw/main/publish/framework-dependent/RarRenamer.exe)** | 7-Zip + .NET 8 |
+| Version | Size | Requirements |
+|---------|------|--------------|
+| **Self-Contained** | ~156 MB | 7-Zip only |
+| **Framework-Dependent** | ~1.6 MB | 7-Zip + .NET 8 |
+
+**[📥 Download Latest Release](https://github.com/L-at-nnes/RarRenamer.NET/releases/latest)**
 
 ---
 
 ### Option 1: Self-Contained (Recommended - No .NET Required)
 
-1. **[Download RarRenamer.exe](https://github.com/L-at-nnes/RarRenamer.NET/raw/main/publish/self-contained/RarRenamer.exe)** (~156 MB)
-2. **Install 7-Zip** from [7-zip.org](https://www.7-zip.org/) if not already installed
-3. Run the application
-4. **No .NET Runtime needed!** ✨
+1. Go to **[Releases](https://github.com/L-at-nnes/RarRenamer.NET/releases/latest)**
+2. Download `RarRenamer.exe` from **Self-Contained** assets
+3. **Install 7-Zip** from [7-zip.org](https://www.7-zip.org/) if not already installed
+4. Run the application
+5. **No .NET Runtime needed!** ✨
 
 ---
 
@@ -148,8 +159,9 @@ If you want to run on Windows 7, you'll need:
 
 1. **Install 7-Zip** from [7-zip.org](https://www.7-zip.org/)
 2. Install [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) if not already installed
-3. **[Download RarRenamer.exe](https://github.com/L-at-nnes/RarRenamer.NET/raw/main/publish/framework-dependent/RarRenamer.exe)** (~1.6 MB)
-4. Run the application
+3. Go to **[Releases](https://github.com/L-at-nnes/RarRenamer.NET/releases/latest)**
+4. Download `RarRenamer.exe` from **Framework-Dependent** assets
+5. Run the application
 
 **Windows 7 Users:** Also install [Visual C++ Redistributable 2015-2022](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 
@@ -416,6 +428,7 @@ Free to use and modify.
 
 ## Version History
 
+- **v3.4.1** (2025-01-12): UX improvements - Multi-selection (Ctrl/Shift), GridSplitter, double-click to open, optimized logging
 - **v3.4.0** (2025-01-12): Debug & Queue system - Real-time logging, debug file export, queue persistence, 2-tab interface
 - **v3.2.0** (2025-01-12): Major UX improvements - Pause/Resume, editable folder path, optimized HDD performance (4-8 threads), standard checkbox behavior, reduced memory usage
 - **v3.1.2** (2025-01-XX): Added manual thread control with ▲▼ buttons, increased default HDD threads to 16

@@ -14,6 +14,7 @@ public partial class UndoWindow : Window
 {
     private LogManager _logManager;
     private ObservableCollection<LogEntryViewModel> _logs = new ObservableCollection<LogEntryViewModel>();
+    private bool _isSyncingSelection = false;
 
     public UndoWindow(LogManager logManager)
     {
@@ -34,13 +35,33 @@ public partial class UndoWindow : Window
         }
     }
 
+    private void DgLogs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isSyncingSelection) return;
+
+        _isSyncingSelection = true;
+        try
+        {
+            // Synchroniser la sélection DataGrid avec IsSelected
+            foreach (LogEntryViewModel item in e.AddedItems)
+            {
+                item.IsSelected = true;
+            }
+            
+            foreach (LogEntryViewModel item in e.RemovedItems)
+            {
+                item.IsSelected = false;
+            }
+        }
+        finally
+        {
+            _isSyncingSelection = false;
+        }
+    }
+
     private void DataGridRow_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (sender is DataGridRow row && row.Item is LogEntryViewModel logEntry)
-        {
-            logEntry.IsSelected = !logEntry.IsSelected;
-            e.Handled = true;
-        }
+        // Cette méthode n'est plus utilisée - comportement standard de la checkbox
     }
 
     private void BtnSelectAll_Click(object sender, RoutedEventArgs e)

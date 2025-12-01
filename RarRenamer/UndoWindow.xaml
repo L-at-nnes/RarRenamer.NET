@@ -90,7 +90,7 @@
 
         <Label Grid.Row="0" Content="Select operations to undo:" FontWeight="Bold" FontSize="16"/>
 
-        <DataGrid Grid.Row="1" x:Name="dgLogs" Margin="0,10">
+        <DataGrid Grid.Row="1" x:Name="dgLogs" Margin="0,10" SelectionMode="Extended" SelectionChanged="DgLogs_SelectionChanged">
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
                 <DataGridTextColumn Header="Date/Time" Binding="{Binding Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" Width="150" IsReadOnly="True"/>
