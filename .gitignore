@@ -1,7 +1,7 @@
 # .NET build artifacts
 bin/
 obj/
-# publish/ - REMOVED to allow publishing releases
+publish/
 
 # User-specific files
 *.user

@@ -26,6 +26,8 @@ public partial class MainWindow : Window
     private bool _debugLogEnabled = false;
     private readonly string _debugLogPath = "debug_log.txt";
     private readonly object _logLock = new object();
+    private const int MaxLogLines = 500;
+    private bool _isSyncingSelection = false;
 
     public MainWindow()
     {
@@ -56,6 +58,15 @@ public partial class MainWindow : Window
         Dispatcher.InvokeAsync(() =>
         {
             txtLog.AppendText(logEntry + Environment.NewLine);
+            
+            // Limiter à MaxLogLines pour éviter la consommation RAM
+            var lines = txtLog.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            if (lines.Length > MaxLogLines)
+            {
+                // Garder seulement les dernières MaxLogLines lignes
+                txtLog.Text = string.Join(Environment.NewLine, lines.Skip(lines.Length - MaxLogLines));
+            }
+            
             scrollViewerLog.ScrollToEnd();
         });
 
@@ -326,12 +337,7 @@ public partial class MainWindow : Window
                         return;
 
                     var fileName = Path.GetFileName(filePath);
-                    
-                    AddLog($"Scanning: {fileName}");
-                    
                     var scanResult = await RarScanner.ScanArchiveAsync(filePath, timeoutSeconds: 60);
-
-                    AddLog($"  → {fileName}: {scanResult.Status}");
 
                     var item = new RarFileItem
                     {
@@ -760,6 +766,98 @@ public partial class MainWindow : Window
         foreach (var item in _queueItems)
         {
             item.IsSelected = false;
+        }
+    }
+
+    // ==================== SELECTION MANAGEMENT ====================
+
+    private void DgResults_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isSyncingSelection) return;
+
+        _isSyncingSelection = true;
+        try
+        {
+            // Synchroniser la sélection DataGrid avec IsSelected
+            foreach (RarFileItem item in e.AddedItems)
+            {
+                if (item.CanRename)
+                    item.IsSelected = true;
+            }
+            
+            foreach (RarFileItem item in e.RemovedItems)
+            {
+                item.IsSelected = false;
+            }
+        }
+        finally
+        {
+            _isSyncingSelection = false;
+        }
+    }
+
+    private void DgQueue_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isSyncingSelection) return;
+
+        _isSyncingSelection = true;
+        try
+        {
+            // Synchroniser la sélection DataGrid avec IsSelected
+            foreach (QueueItem item in e.AddedItems)
+            {
+                item.IsSelected = true;
+            }
+            
+            foreach (QueueItem item in e.RemovedItems)
+            {
+                item.IsSelected = false;
+            }
+        }
+        finally
+        {
+            _isSyncingSelection = false;
+        }
+    }
+
+    // ==================== DOUBLE-CLICK TO OPEN FILE ====================
+
+    private void DgResults_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (dgResults.SelectedItem is RarFileItem item)
+        {
+            OpenFileInExplorer(item.FullPath);
+        }
+    }
+
+    private void DgQueue_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (dgQueue.SelectedItem is QueueItem item)
+        {
+            OpenFileInExplorer(item.FullPath);
+        }
+    }
+
+    private void OpenFileInExplorer(string filePath)
+    {
+        try
+        {
+            if (File.Exists(filePath))
+            {
+                // Ouvrir l'explorateur et sélectionner le fichier
+                System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{filePath}\"");
+                AddLog($"Opened in explorer: {Path.GetFileName(filePath)}");
+            }
+            else
+            {
+                MessageBox.Show($"File not found:\n{filePath}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                AddLog($"ERROR: File not found: {filePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error opening file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            AddLog($"ERROR opening file: {ex.Message}");
         }
     }
 }

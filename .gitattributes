@@ -1,4 +1,0 @@
-# Git LFS (Large File Storage) configuration
-# This allows large files like the self-contained .exe to be tracked
-publish/self-contained/RarRenamer.exe filter=lfs diff=lfs merge=lfs -text
-*.exe filter=lfs diff=lfs merge=lfs -text

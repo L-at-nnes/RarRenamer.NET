@@ -149,8 +149,9 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="150" MinHeight="50"/>
+                        <RowDefinition Height="5"/>
+                        <RowDefinition Height="*" MinHeight="200"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
@@ -194,14 +195,18 @@
                     <ProgressBar Grid.Row="3" x:Name="progressBar" Margin="0,0,0,15" IsIndeterminate="False" Visibility="Collapsed"/>
 
                     <!-- LOG EN TEMPS RÉEL -->
-                    <Border Grid.Row="4" BorderBrush="#3F3F46" BorderThickness="1" Background="#252526" Margin="0,0,0,10" MaxHeight="150">
+                    <Border Grid.Row="4" BorderBrush="#3F3F46" BorderThickness="1" Background="#252526" Margin="0,0,0,0">
                         <ScrollViewer x:Name="scrollViewerLog" VerticalScrollBarVisibility="Auto">
                             <TextBox x:Name="txtLog" IsReadOnly="True" TextWrapping="Wrap" Background="Transparent" 
                                      Foreground="#D4D4D4" BorderThickness="0" Padding="10" FontFamily="Consolas" FontSize="11"/>
                         </ScrollViewer>
                     </Border>
 
-                    <DataGrid Grid.Row="5" x:Name="dgResults" Margin="0,0,0,15" Height="300">
+                    <!-- GRID SPLITTER -->
+                    <GridSplitter Grid.Row="5" Height="5" HorizontalAlignment="Stretch" Background="#3F3F46" 
+                                  VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext" Cursor="SizeNS"/>
+
+                    <DataGrid Grid.Row="6" x:Name="dgResults" Margin="0,0,0,15" SelectionMode="Extended" SelectionChanged="DgResults_SelectionChanged" MouseDoubleClick="DgResults_MouseDoubleClick">
                         <DataGrid.Columns>
                             <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="60"/>
                             <DataGridTextColumn Header="Current Name" Binding="{Binding CurrentName}" Width="2*" IsReadOnly="True"/>
@@ -210,7 +215,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button x:Name="btnSelectAll" Content="Select All" Width="120" Margin="0,0,10,0" Click="BtnSelectAll_Click"/>
                         <Button x:Name="btnDeselectAll" Content="Deselect All" Width="120" Margin="0,0,10,0" Click="BtnDeselectAll_Click"/>
                     </StackPanel>
@@ -232,7 +237,7 @@
                         <Button x:Name="btnLoadQueue" Content="📥 Load Queue" Width="150" Margin="10,0,0,0" Background="#007ACC" Click="BtnLoadQueue_Click"/>
                     </StackPanel>
 
-                    <DataGrid Grid.Row="1" x:Name="dgQueue" Margin="0,0,0,15">
+                    <DataGrid Grid.Row="1" x:Name="dgQueue" Margin="0,0,0,15" SelectionMode="Extended" SelectionChanged="DgQueue_SelectionChanged" MouseDoubleClick="DgQueue_MouseDoubleClick">
                         <DataGrid.Columns>
                             <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="60"/>
                             <DataGridTextColumn Header="Current Name" Binding="{Binding CurrentName}" Width="2*" IsReadOnly="True"/>
