@@ -85,7 +85,7 @@ If you want to run on Windows 7, you'll need:
 
 ## 📥 Installation
 
-### 🚀 Quick Download (Latest v3.4.1)
+### 🚀 Quick Download (Latest v3.4.2)
 
 **Download from GitHub Releases:**
 
@@ -368,7 +368,8 @@ Free to use and modify.
 
 ## Version History
 
-- **v3.4.1** (2025-01-12): UX improvements - Multi-selection (Ctrl/Shift), GridSplitter, double-click to open, optimized logging, password-protected RAR instant skip (3s timeout)
+- **v3.4.2** (2025-01-12): Critical fix - Password-protected RAR archives no longer hang (3-second timeout)
+- **v3.4.1** (2025-01-12): UX improvements - Multi-selection (Ctrl/Shift), GridSplitter, double-click to open, optimized logging
 - **v3.4.0** : Debug & Queue system - Real-time logging, debug file export, queue persistence, 2-tab interface
 - **v3.2.0** : Major UX improvements - Pause/Resume, editable folder path, optimized HDD performance (4-8 threads), standard checkbox behavior, reduced memory usage
 - **v3.1.2** : Added manual thread control with ▲▼ buttons, increased default HDD threads to 16
