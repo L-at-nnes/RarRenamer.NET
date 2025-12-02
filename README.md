@@ -292,8 +292,9 @@ dotnet publish -c Release -r win-x64 --self-contained false \
 - Check file permissions
 
 **"Password protected" or "Corrupted archive"**
-- Archives are detected but cannot be scanned
-- These files will be marked and skipped
+- Password-protected archives are instantly detected and skipped (3-second timeout prevents hanging)
+- Corrupted archives are detected but cannot be scanned
+- These files will be marked and skipped automatically
 
 **"Timeout" status**
 - File took longer than 30 seconds to scan
@@ -367,7 +368,7 @@ Free to use and modify.
 
 ## Version History
 
-- **v3.4.1** : UX improvements - Multi-selection (Ctrl/Shift), GridSplitter, double-click to open, optimized logging
+- **v3.4.1** (2025-01-12): UX improvements - Multi-selection (Ctrl/Shift), GridSplitter, double-click to open, optimized logging, password-protected RAR instant skip (3s timeout)
 - **v3.4.0** : Debug & Queue system - Real-time logging, debug file export, queue persistence, 2-tab interface
 - **v3.2.0** : Major UX improvements - Pause/Resume, editable folder path, optimized HDD performance (4-8 threads), standard checkbox behavior, reduced memory usage
 - **v3.1.2** : Added manual thread control with ▲▼ buttons, increased default HDD threads to 16
