@@ -88,12 +88,50 @@ namespace RarRenamer.Services
 
                         process.Start();
                         
-                        // Lecture optimisée ligne par ligne au lieu de tout charger en mémoire
+                        // Read line by line with timeout to avoid hanging on password prompts
                         var outputLines = new List<string>();
                         string? line;
-                        while ((line = await process.StandardOutput.ReadLineAsync()) != null)
+                        bool isEncrypted = false;
+                        var readTimeout = TimeSpan.FromSeconds(3);
+                        
+                        using var cts = new CancellationTokenSource();
+                        
+                        var readTask = Task.Run(async () =>
                         {
-                            outputLines.Add(line);
+                            while ((line = await process.StandardOutput.ReadLineAsync()) != null)
+                            {
+                                // Check for "Encrypted = +" in 7-Zip output
+                                if (line.Trim().StartsWith("Encrypted = +", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    isEncrypted = true;
+                                    return;
+                                }
+                                outputLines.Add(line);
+                            }
+                        }, cts.Token);
+
+                        // Wait max 3 seconds for reading
+                        if (await Task.WhenAny(readTask, Task.Delay(readTimeout)) != readTask)
+                        {
+                            // Timeout - likely password prompt or hanging
+                            cts.Cancel();
+                            try { process.Kill(true); } catch { }
+                            return new ScanResult
+                            {
+                                Status = "?? Password protected (timeout)",
+                                IsPasswordProtected = true
+                            };
+                        }
+
+                        // If encrypted detected, kill process and return immediately
+                        if (isEncrypted)
+                        {
+                            try { process.Kill(true); } catch { }
+                            return new ScanResult
+                            {
+                                Status = "?? Password protected",
+                                IsPasswordProtected = true
+                            };
                         }
                         
                         string error = await process.StandardError.ReadToEndAsync();
